@@ -1,0 +1,29 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 377227313068-kruj5s8clb1mavvvc1mkjiivk1v85jec.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+              - profile
+  # ... 기존 security 설정 유지 ...
+  datasource:
+    url: jdbc:h2:mem:testdb  # 데이터베이스 주소를 'testdb'로 고정
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true  # H2 콘솔 사용 허용
+      path: /h2-console  # 접속 주소 설정
+
+  jpa:
+    hibernate:
+      ddl-auto: update # 서버 켤 때 테이블 자동 생성/수정
+    properties:
+      hibernate:
+        format_sql: true # 실행되는 SQL 예쁘게 보여주기
