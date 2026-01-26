@@ -46,21 +46,26 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 .anyMatch(authority -> authority.getAuthority().equals(Role.GUEST.getKey()));
 
 
-        String targetUrl;
-
         // 5. 역할에 따른 리다이렉트 (페이지 이동)
+        // 배포 환경이면 https://onepageme.kr, 로컬이면 http://localhost:3000
+        String baseUrl = (request.getServerName().equals("localhost"))
+                ? "http://localhost:3000"
+                : "https://onepageme.kr";
+
+        String targetUrl;
         if (isGuest) {
-            // 손님(GUEST)이면 회원가입 추가 정보 입력 페이지로 이동
-            targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/signup")
+            targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/signup")
                     .queryParam("accessToken", accessToken)
                     .queryParam("refreshToken", refreshToken)
                     .build().toUriString();
         } else {
-            // 일반 사용자(USER)면 메인 페이지로 이동
-            targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/")
+            targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/")
                     .queryParam("accessToken", accessToken)
                     .queryParam("refreshToken", refreshToken)
                     .build().toUriString();
         }
+
+        // 6. 실제로 리다이렉트를 실행
+        response.sendRedirect(targetUrl);
     }
 }
