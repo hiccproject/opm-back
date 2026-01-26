@@ -1,0 +1,74 @@
+package opm.example.opm.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import opm.example.opm.common.JwtTokenProvider;
+import opm.example.opm.domain.Member;
+import opm.example.opm.dto.LoginRequestDto;
+import opm.example.opm.dto.LoginResponseDto;
+import opm.example.opm.dto.SignupRequestDto;
+import opm.example.opm.repository.MemberRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class MemberService {
+
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Transactional
+    public Long signup(SignupRequestDto requestDto) {
+        // 1. 이메일 중복 검사
+        if (memberRepository.findByEmail(requestDto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+        }
+
+        // 2. 비밀번호와 비밀번호 확인 일치 검사
+        if (!requestDto.getPassword().equals(requestDto.getPasswordConfirm())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. 약관 동의 검사
+        if (!requestDto.isTermsAgreed()) {
+            throw new IllegalArgumentException("약관에 동의해야 합니다.");
+        }
+
+        // 4. 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+
+        // 5. 유저 저장
+        Member member = new Member(requestDto.getName(), requestDto.getEmail(), encodedPassword);
+        memberRepository.save(member);
+
+        return member.getId();
+    }
+
+
+    // MemberService.java
+    @Transactional(readOnly = true)
+    public LoginResponseDto login(LoginRequestDto requestDto) {
+        // 1. 이메일로 유저 조회
+        Member member = memberRepository.findByEmail(requestDto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+
+        // 2. 일치 여부 검사
+        boolean isMatch = passwordEncoder.matches(requestDto.getPassword(), member.getPassword());
+
+
+        if (!isMatch) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 로그인 성공 시 토큰 생성
+        String AccessToken = jwtTokenProvider.createAccessToken(member.getEmail());
+        String RefreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
+
+        // DTO에 토큰을 실어서 반환
+        return new LoginResponseDto(member.getId(), member.getName(), member.getEmail(), AccessToken, RefreshToken);
+    }
+}

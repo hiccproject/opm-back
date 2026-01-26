@@ -1,8 +1,13 @@
 package opm.example.opm.common.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import opm.example.opm.common.error.ErrorCode;
 import opm.example.opm.common.response.ApiResponse;
@@ -13,6 +18,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -84,10 +90,68 @@ public class GlobalExceptionHandler {
                 ErrorCode.METHOD_NOT_ALLOWED.getCode(), ErrorCode.METHOD_NOT_ALLOWED.getMessage());
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    protected ApiResponse<Void> handleNoResourceFoundException(
+            NoResourceFoundException e, HttpServletRequest request, HttpServletResponse response) {
+
+        // 스웨거 관련 리소스 요청(/v3/api-docs 등)이라면 핸들러가 개입하지 않고 시스템에 맡깁니다.
+        String uri = request.getRequestURI();
+        if (uri.contains("v3/api-docs") || uri.contains("swagger-ui")) {
+            // 여기서 다시 throw를 하지 않고 404 응답을 직접 주면 "처리되지 않은 예외" 로그가 사라집니다.
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return null; // 혹은 빈 응답
+        }
+
+        log.warn("일반 리소스 미발견: {}", e.getMessage());
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        return ApiResponse.error("C007", "요청하신 리소스를 찾을 수 없습니다.");
+    }
+
+    /**
+     * JPA/Hibernate Bean Validation 제약 조건 위반 시 발생
+     * 엔티티 필드에 선언된 @Email, @NotBlank 등의 검증 실패 처리
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected ApiResponse<Void> handleConstraintViolationException(
+            ConstraintViolationException e, HttpServletResponse response) {
+        log.error("ConstraintViolationException: {}", e.getMessage(), e);
+
+        // 1. 에러 메시지 추출 ("올바른 형식의 이메일 주소여야 합니다")
+        String errorMessage = e.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining(", "));
+
+        // 2. HTTP 상태 코드 설정 (400 Bad Request)
+        response.setStatus(ErrorCode.INVALID_INPUT_VALUE.getStatus().value());
+
+        // 3. 에러 코드 C002와 함께 구체적인 메시지 반환
+        return ApiResponse.error(
+                ErrorCode.INVALID_INPUT_VALUE.getCode(),
+                errorMessage);
+    }
+
+    /**
+     * 서비스 로직에서 발생하는 IllegalArgumentException 처리
+     * (예: 비밀번호 불일치, 이미 존재하는 이메일 등)
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected ApiResponse<Void> handleIllegalArgumentException(
+            IllegalArgumentException e, HttpServletResponse response) {
+        log.error("IllegalArgumentException: {}", e.getMessage());
+
+        // HTTP 상태 코드를 400 Bad Request로 설정
+        response.setStatus(ErrorCode.INVALID_INPUT_VALUE.getStatus().value());
+
+        // 에러 코드 C002와 함께 서비스에서 보낸 메시지(e.getMessage())를 반환
+        return ApiResponse.error(
+                ErrorCode.INVALID_INPUT_VALUE.getCode(),
+                e.getMessage());
+    }
+
     /** 그 외 모든 예외 처리 */
     @ExceptionHandler(Exception.class)
     protected ApiResponse<Void> handleException(Exception e, HttpServletResponse response) {
-        log.error("Exception: {}", e.getMessage(), e);
+        log.error("Unhandled Exception: ", e);
         response.setStatus(ErrorCode.INTERNAL_SERVER_ERROR.getStatus().value());
         return ApiResponse.error(
                 ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
