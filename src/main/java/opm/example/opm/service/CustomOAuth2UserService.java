@@ -1,8 +1,8 @@
-package HICC_Project.OnePageMe.service;
+package opm.example.opm.service;
 
-import HICC_Project.OnePageMe.domain.Member;
-import HICC_Project.OnePageMe.domain.Role;
-import HICC_Project.OnePageMe.repository.MemberRepository;
+import opm.example.opm.domain.Member;
+import opm.example.opm.domain.Role;
+import opm.example.opm.repository.MemberRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

@@ -1,5 +1,8 @@
 package opm.example.opm.common.config;
 
+import lombok.RequiredArgsConstructor;
+import opm.example.opm.common.oauth.OAuth2LoginSuccessHandler;
+import opm.example.opm.service.CustomOAuth2UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,9 +15,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler; // ★ 추가 (주입 받기)
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,11 +50,19 @@ public class SecurityConfig {
                                                 "/swagger-ui.html",
                                                 "/actuator/**",
                                                 "/api/members/**",
-                                                "/api/auth/reissue")
+                                                "/api/auth/reissue",
+                                                "/css/**", "/images/**", "/js/**", "/h2-console/**")
                                         .permitAll()
+                                        .requestMatchers("/signup").hasRole("GUEST") // GUEST만 /signup 접근 가능
                                         // 그 외 모든 요청은 인증 필요
                                         .anyRequest()
                                         .authenticated()
+                )
+                .oauth2Login((oauth2) -> oauth2
+                        .userInfoEndpoint((userInfo) -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuth2LoginSuccessHandler) // ★ 핵심: 로그인 성공 시 이 핸들러를 써라!
                 );
 
         return http.build();

@@ -1,7 +1,7 @@
 package opm.example.opm.service;
 
 import lombok.RequiredArgsConstructor;
-import opm.example.opm.common.JwtTokenProvider;
+import opm.example.opm.common.oauth.JwtTokenProvider;
 import opm.example.opm.domain.Member;
 import opm.example.opm.dto.TokenResponseDto;
 import opm.example.opm.repository.MemberRepository;

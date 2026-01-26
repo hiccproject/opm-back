@@ -148,6 +148,15 @@ public class GlobalExceptionHandler {
                 e.getMessage());
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    protected ApiResponse<Void> handleRuntimeException(RuntimeException e, HttpServletResponse response) {
+        // 400 Bad Request 상태 코드를 Swagger에 전달
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+
+        // ApiResponse 양식에 맞춰 에러 메시지를 반환
+        return ApiResponse.error("A002", e.getMessage());
+    }
+
     /** 그 외 모든 예외 처리 */
     @ExceptionHandler(Exception.class)
     protected ApiResponse<Void> handleException(Exception e, HttpServletResponse response) {
