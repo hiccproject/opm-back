@@ -2,10 +2,11 @@ package opm.example.opm.repository;
 
 import opm.example.opm.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
 
+// JpaRepository<Entity클래스, PK타입>을 상속받으면 기본적인 CRUD가 자동 생성됩니다.
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    // 이메일로 회원을 찾는 기능 (중복 가입 방지용)
+
+    // 이메일로 이미 가입된 회원인지 확인하는 메서드
     Optional<Member> findByEmail(String email);
 }

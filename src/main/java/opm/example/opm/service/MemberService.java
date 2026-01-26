@@ -2,8 +2,9 @@ package opm.example.opm.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import opm.example.opm.common.JwtTokenProvider;
+import opm.example.opm.common.oauth.JwtTokenProvider;
 import opm.example.opm.domain.Member;
+import opm.example.opm.domain.Role;
 import opm.example.opm.dto.LoginRequestDto;
 import opm.example.opm.dto.LoginResponseDto;
 import opm.example.opm.dto.SignupRequestDto;
@@ -42,7 +43,13 @@ public class MemberService {
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
         // 5. 유저 저장
-        Member member = new Member(requestDto.getName(), requestDto.getEmail(), encodedPassword);
+        Member member = Member.builder()
+                .name(requestDto.getName())
+                .email(requestDto.getEmail())
+                .password(encodedPassword) // 일반 가입은 암호화된 비번 저장
+                .role(Role.USER)
+                .build();
+
         memberRepository.save(member);
 
         return member.getId();
@@ -50,7 +57,7 @@ public class MemberService {
 
 
     // MemberService.java
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResponseDto login(LoginRequestDto requestDto) {
         // 1. 이메일로 유저 조회
         Member member = memberRepository.findByEmail(requestDto.getEmail())
@@ -67,6 +74,10 @@ public class MemberService {
         // 로그인 성공 시 토큰 생성
         String AccessToken = jwtTokenProvider.createAccessToken(member.getEmail());
         String RefreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
+
+        // DB에 RefreshToken 저장
+        member.updateRefreshToken(RefreshToken);
+        memberRepository.save(member);
 
         // DTO에 토큰을 실어서 반환
         return new LoginResponseDto(member.getId(), member.getName(), member.getEmail(), AccessToken, RefreshToken);

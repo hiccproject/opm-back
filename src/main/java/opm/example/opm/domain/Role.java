@@ -1,4 +1,4 @@
-package HICC_Project.OnePageMe.domain;
+package opm.example.opm.domain;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

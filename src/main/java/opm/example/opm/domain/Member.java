@@ -1,32 +1,32 @@
 package opm.example.opm.domain;
 
+
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Entity
+
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor // 빈 생성자 자동 생성
+@Entity // DB 테이블과 매칭됨을 알림
 public class Member {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "이름은 필수 입력 값입니다.")
+    @Column(nullable = false)
     private String name;
 
-    @NotBlank(message = "이메일은 필수 입력 값입니다.")
-    @Column(unique = true) // 이메일은 중복되면 안 됨
-    @Email
+    @Column(nullable = false)
     private String email;
 
-    @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
+    @Column // 비밀번호 필드 추가 (OAuth 회원은 처음엔 null일 수 있음)
     private String password;
+
+    @Enumerated(EnumType.STRING) // DB에 숫자가 아닌 문자열(USER, ADMIN)로 저장
+    @Column(nullable = false)
+    private Role role;
 
     @Column(length = 500)
     private String refreshToken;
@@ -36,9 +36,24 @@ public class Member {
         this.refreshToken = refreshToken;
     }
 
-    public Member(String name, String email, String password) {
+    @Builder // 빌더 패턴으로 객체 생성 쉽게 만들기
+    public Member(String name, String email, String password, Role role) {
         this.name = name;
         this.email = email;
         this.password = password;
+        this.role = role;
+    }
+
+    // 이미 가입된 회원이 정보(이름, 사진)를 수정했을 때 업데이트하는 메서드
+    public Member update(String name) {
+        this.name = name;
+        return this;
+    }
+
+    // 추가 정보 입력을 처리할 비즈니스 로직 메서드 추가
+    public void completeSignup(String name, String password) {
+        this.name = name;      // 이름 수정 가능하게
+        this.password = password; // 비밀번호 저장
+        this.role = Role.USER;    // 등급을 GUEST -> USER로 승격!
     }
 }

@@ -1,8 +1,7 @@
-package HICC_Project.OnePageMe.controller;
+package opm.example.opm.controller;
 
-import HICC_Project.OnePageMe.domain.Member;
-import HICC_Project.OnePageMe.repository.MemberRepository;
-import HICC_Project.OnePageMe.service.CustomOAuth2UserService; // (필요하다면)
+import opm.example.opm.domain.Member;
+import opm.example.opm.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
