@@ -35,7 +35,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         // 3. DB에 RefreshToken 저장
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("가입되지 않은 이메일입니다."));
+                .orElseGet(() -> {
+                    Member newMember = Member.builder()
+                            .email(email)
+                            .role(Role.GUEST) // 초기 권한은 GUEST로 설정
+                            .build();
+                    return memberRepository.save(newMember);
+                });
 
         member.updateRefreshToken(refreshToken);
         memberRepository.save(member); // DB 반영
