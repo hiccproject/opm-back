@@ -3,3 +3,8 @@ spring:
     name: opm
   profiles:
     active: local
+  logging:
+    level:
+      org:
+        springframework:
+          security: DEBUG
