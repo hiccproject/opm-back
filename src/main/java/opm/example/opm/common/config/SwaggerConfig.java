@@ -42,7 +42,8 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(apiInfo())
                 .servers(List.of(
-                        new Server().url("/").description("Default Server URL"), // 상대 경로 (가장 추천)
+                        new Server().url("/").description("Default Server URL"),
+                        new Server().url("https://api.onepageme.kr").description("Production Server (New)"),
                         new Server().url("http://localhost:8080").description("Local Server"),
                         new Server().url("https://onepageme.kr").description("Production Server")
                 ))
