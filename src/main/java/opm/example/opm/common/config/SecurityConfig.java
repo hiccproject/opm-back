@@ -61,6 +61,7 @@ public class SecurityConfig {
                                                 "/css/**", "/images/**", "/js/**", "/h2-console/**")
                                         .permitAll()
                                         .requestMatchers("/signup").hasRole("GUEST") // GUEST만 /signup 접근 가능
+                                        .requestMatchers("/s3/**").permitAll() //S3 이미지 업로드 접근 허용
                                         // 그 외 모든 요청은 인증 필요
                                         .anyRequest()
                                         .authenticated()
