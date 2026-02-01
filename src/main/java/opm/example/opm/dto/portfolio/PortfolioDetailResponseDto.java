@@ -25,11 +25,14 @@ public class PortfolioDetailResponseDto {
     private LayoutType layoutType;
 
     // 추가 관리 데이터
-    private Integer viewCount;
     private boolean isOwner;
     private LocalDateTime updatedAt;
 
-    public static PortfolioDetailResponseDto fromEntity(Portfolio portfolio, boolean isOwner) {
+    // 조회수 관련 필드
+    private Integer totalViewCount; // 누적 조회수
+    private Integer todayViewCount; // 오늘 하루 조회수
+
+    public static PortfolioDetailResponseDto fromEntity(Portfolio portfolio, boolean isOwner, Integer todayViewCount) {
         return PortfolioDetailResponseDto.builder()
                 .id(portfolio.getPortfolioId())
                 .category(portfolio.getCategory())
@@ -40,12 +43,13 @@ public class PortfolioDetailResponseDto {
                 .location(portfolio.getLocation())
                 .summaryIntro(portfolio.getSummaryIntro())
                 .layoutType(portfolio.getLayoutType())
-                .viewCount(isOwner ? portfolio.getViewCount() : null)
                 .isOwner(isOwner)
                 .updatedAt(portfolio.getUpdatedAt())
                 .projects(portfolio.getProjects().stream()
                         .map(p -> new PortfolioSaveRequestDto.ProjectDto(p.getProjectName(), p.getProjectSummary(), p.getProjectLink()))
                         .toList())
+                .totalViewCount(isOwner ? portfolio.getViewCount() : null)
+                .todayViewCount(isOwner ? todayViewCount : null)
                 .build();
     }
 }

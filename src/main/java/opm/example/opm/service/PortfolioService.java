@@ -6,17 +6,19 @@ import opm.example.opm.common.oauth.MemberDetails;
 import opm.example.opm.domain.member.Member;
 import opm.example.opm.domain.portfolio.Portfolio;
 import opm.example.opm.domain.portfolio.PortfolioStatus;
+import opm.example.opm.domain.portfolio.PortfolioViewLog;
 import opm.example.opm.domain.portfolio.Project;
 import opm.example.opm.dto.portfolio.MyPortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioDetailResponseDto;
-import opm.example.opm.dto.portfolio.PortfolioResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioSaveRequestDto;
 import opm.example.opm.repository.MemberRepository;
 import opm.example.opm.repository.PortfolioRepository;
+import opm.example.opm.repository.PortfolioViewLogRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -26,6 +28,7 @@ public class PortfolioService {
 
     private final PortfolioRepository portfolioRepository;
     private final MemberRepository memberRepository;
+    private final PortfolioViewLogRepository viewLogRepository;
 
     @Value("${app.domain}")
     private String domain;
@@ -147,13 +150,26 @@ public class PortfolioService {
             throw new IllegalStateException("아직 발행되지 않은 명함입니다.");
         }
 
-        // 3. 본인이 아닐 때만 조회수 증가
+        // 본인이 아닐 때만 조회수 처리
         if (!isOwner) {
-            Integer currentCount = portfolio.getViewCount();
-            portfolio.setViewCount((currentCount == null ? 0 : currentCount) + 1);
+            // 1. 전체 조회수 증가
+            portfolio.incrementViewCount(); // (기존 컬럼)
+
+            // 2. 일일 조회수 증가 로직
+            LocalDate today = LocalDate.now();
+            PortfolioViewLog viewLog = viewLogRepository.findByPortfolioAndViewDate(portfolio, today)
+                    .orElseGet(() -> viewLogRepository.save(new PortfolioViewLog(portfolio, today)));
+
+            if (viewLog.getId() != null) { // 방금 생성된 것이 아니라면 증가
+                viewLog.increment();
+            }
         }
 
-        return PortfolioDetailResponseDto.fromEntity(portfolio, isOwner);
+        // ResponseDto에 오늘 조회수와 전체 조회수를 모두 담아 반환
+        Integer todayCount = viewLogRepository.findByPortfolioAndViewDate(portfolio, LocalDate.now())
+                .map(PortfolioViewLog::getDailyCount).orElse(0);
+
+        return PortfolioDetailResponseDto.fromEntity(portfolio, isOwner, todayCount);
     }
 
     // 포트폴리오 공유 링크 생성

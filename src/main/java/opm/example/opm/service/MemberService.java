@@ -9,6 +9,7 @@ import opm.example.opm.dto.auth.LoginRequestDto;
 import opm.example.opm.dto.auth.LoginResponseDto;
 import opm.example.opm.dto.auth.SignupRequestDto;
 import opm.example.opm.repository.MemberRepository;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final StringRedisTemplate redisTemplate;
 
     @Transactional
     public Long signup(SignupRequestDto requestDto) {
@@ -82,4 +84,17 @@ public class MemberService {
         // DTO에 토큰을 실어서 반환
         return new LoginResponseDto(member.getId(), member.getName(), member.getEmail(), AccessToken, RefreshToken);
     }
+
+    @Transactional
+    public void updatePassword(String email, String newPassword) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // 새로운 비밀번호 암호화 후 저장
+        member.updatePassword(passwordEncoder.encode(newPassword));
+
+        // 인증 성공 후에는 Redis에서 인증번호를 삭제해 주는 것이 깔끔합니다.
+        redisTemplate.delete(email);
+    }
+
 }

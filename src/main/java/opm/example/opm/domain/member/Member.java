@@ -56,4 +56,9 @@ public class Member {
         this.password = password; // 비밀번호 저장
         this.role = Role.USER;    // 등급을 GUEST -> USER로 승격!
     }
+
+    // 비밀번호 변경 전용 메서드
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

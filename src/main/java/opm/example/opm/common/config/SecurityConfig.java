@@ -66,6 +66,7 @@ public class SecurityConfig {
                                                 "/error",
                                                 "/actuator/**",
                                                 "/api/members/**",
+                                                "/api/mail/**",
                                                 "/api/auth/reissue",
                                                 "/css/**", "/images/**", "/js/**", "/h2-console/**")
                                         .permitAll()

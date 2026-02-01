@@ -71,18 +71,6 @@ public class Portfolio extends BaseTimeEntity {
         }
     }
 
-    public void updateStep1(String category, String subCategory, String profileImg) {
-        this.category = category;
-        this.subCategory = subCategory;
-        this.profileImg = profileImg;
-    }
-
-    public void updateStep2(String email, String phone, String location) {
-        this.email = email;
-        this.phone = phone;
-        this.location = location;
-    }
-
     public void publish() {
         this.status = PortfolioStatus.PUBLISHED;
     }
@@ -94,6 +82,14 @@ public class Portfolio extends BaseTimeEntity {
     // 업데이트 메서드 추가
     public void updateSlug(String slug) {
         this.slug = slug;
+    }
+
+    // 조회수 증가 메서드
+    public void incrementViewCount() {
+        if (this.viewCount == null) {
+            this.viewCount = 0;
+        }
+        this.viewCount++;
     }
 
 }
