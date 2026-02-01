@@ -3,9 +3,9 @@ package opm.example.opm.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import opm.example.opm.common.response.ApiResponse;
-import opm.example.opm.dto.LoginRequestDto;
-import opm.example.opm.dto.LoginResponseDto;
-import opm.example.opm.dto.SignupRequestDto;
+import opm.example.opm.dto.auth.LoginRequestDto;
+import opm.example.opm.dto.auth.LoginResponseDto;
+import opm.example.opm.dto.auth.SignupRequestDto;
 import opm.example.opm.service.MemberService;
 import org.springframework.web.bind.annotation.*;
 

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
 
 @Slf4j
@@ -71,5 +71,19 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    // 헤더에서 토큰 추출 (필터에서 사용)
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+
+    // 이메일 추출 (필터에서 호출하는 이름과 맞춤)
+    public String getEmail(String token) {
+        return getEmailFromToken(token);
     }
 }

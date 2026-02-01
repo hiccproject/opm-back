@@ -2,8 +2,8 @@ package opm.example.opm.controller;
 
 
 import lombok.RequiredArgsConstructor;
-import opm.example.opm.dto.ReissueRequestDto;
-import opm.example.opm.dto.TokenResponseDto;
+import opm.example.opm.dto.auth.ReissueRequestDto;
+import opm.example.opm.dto.auth.TokenResponseDto;
 import opm.example.opm.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

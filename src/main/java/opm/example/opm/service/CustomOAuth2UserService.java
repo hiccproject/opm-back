@@ -1,7 +1,7 @@
 package opm.example.opm.service;
 
-import opm.example.opm.domain.Member;
-import opm.example.opm.domain.Role;
+import opm.example.opm.domain.member.Member;
+import opm.example.opm.domain.member.Role;
 import opm.example.opm.repository.MemberRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;

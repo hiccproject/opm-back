@@ -1,6 +1,6 @@
 package opm.example.opm.repository;
 
-import opm.example.opm.domain.Member;
+import opm.example.opm.domain.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 

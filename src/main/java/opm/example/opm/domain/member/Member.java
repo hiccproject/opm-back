@@ -1,4 +1,4 @@
-package opm.example.opm.domain;
+package opm.example.opm.domain.member;
 
 
 import jakarta.persistence.*;
