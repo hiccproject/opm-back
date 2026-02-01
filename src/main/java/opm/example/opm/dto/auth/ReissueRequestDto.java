@@ -1,4 +1,4 @@
-package opm.example.opm.dto;
+package opm.example.opm.dto.auth;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

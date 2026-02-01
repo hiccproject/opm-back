@@ -1,4 +1,4 @@
-package opm.example.opm.dto;
+package opm.example.opm.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
