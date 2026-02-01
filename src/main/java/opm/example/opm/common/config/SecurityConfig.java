@@ -1,10 +1,11 @@
 package opm.example.opm.common.config;
 
 import lombok.RequiredArgsConstructor;
-import opm.example.opm.common.oauth.OAuth2LoginSuccessHandler;
+import opm.example.opm.common.oauth.*;
 import opm.example.opm.service.CustomOAuth2UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -12,9 +13,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 
 import java.util.Arrays;
 
@@ -25,7 +28,10 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler; // ★ 추가 (주입 받기)
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final MemberDetailsService memberDetailsService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,6 +48,9 @@ public class SecurityConfig {
                 // 세션 관리: STATELESS (JWT 사용)
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // JWT 필터 추가
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, memberDetailsService),
+                        UsernamePasswordAuthenticationFilter.class)
                 // 요청별 인가 설정
                 .authorizeHttpRequests(
                         authorize ->
@@ -62,6 +71,8 @@ public class SecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/signup").hasRole("GUEST") // GUEST만 /signup 접근 가능
                                         .requestMatchers("/s3/**").permitAll() //S3 이미지 업로드 접근 허용
+                                        .requestMatchers("/api/portfolios/my").authenticated() // 내 목록은 인증 필수
+                                        .requestMatchers(HttpMethod.GET, "/api/portfolios/{id}").permitAll() // 상세 조회는 비회원 허용 예정
                                         // 그 외 모든 요청은 인증 필요
                                         .anyRequest()
                                         .authenticated()
@@ -71,7 +82,10 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService)
                         )
                         .successHandler(oAuth2LoginSuccessHandler) // ★ 핵심: 로그인 성공 시 이 핸들러를 써라!
-                );
+                )
+                .exceptionHandling(handler -> handler
+                    .authenticationEntryPoint(jwtAuthenticationEntryPoint) // 인증 실패 시 처리
+        );
 
         return http.build();
     }

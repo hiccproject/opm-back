@@ -1,6 +1,6 @@
 package opm.example.opm.controller;
 
-import opm.example.opm.domain.Member;
+import opm.example.opm.domain.member.Member;
 import opm.example.opm.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

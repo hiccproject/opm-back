@@ -1,7 +1,7 @@
 package opm.example.opm.common.oauth;
 
-import opm.example.opm.domain.Member;
-import opm.example.opm.domain.Role;
+import opm.example.opm.domain.member.Member;
+import opm.example.opm.domain.member.Role;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
