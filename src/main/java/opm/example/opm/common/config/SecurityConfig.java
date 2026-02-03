@@ -41,6 +41,11 @@ public class SecurityConfig {
                 // CORS 설정 (필요시 별도 설정)
                 .cors(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // H2 콘솔 사용을 위한 프레임 옵션 비활성화
+                // (이게 없으면 H2 콘솔 화면이 하얗게 나옵니다)
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+
                 // Form 로그인 비활성화
                 .formLogin(AbstractHttpConfigurer::disable)
                 // HTTP Basic 인증 비활성화
@@ -83,6 +88,11 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService)
                         )
                         .successHandler(oAuth2LoginSuccessHandler) // ★ 핵심: 로그인 성공 시 이 핸들러를 써라!
+                )
+                // ▼ 로그아웃 설정 추가
+                .logout((logout) -> logout
+                        .logoutSuccessUrl("/")  // 로그아웃 성공 시 메인으로 이동
+                        .invalidateHttpSession(true) // 세션 날리기 (서버의 기억 지우기)
                 )
                 .exceptionHandling(handler -> handler
                     .authenticationEntryPoint(jwtAuthenticationEntryPoint) // 인증 실패 시 처리

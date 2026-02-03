@@ -1,57 +1,56 @@
 package opm.example.opm.controller;
 
-import opm.example.opm.domain.member.Member;
-import opm.example.opm.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import opm.example.opm.domain.member.Member;
+import opm.example.opm.dto.memberResponse.MemberResponseDto;
+import opm.example.opm.dto.signup.SignupRequestDto;
+import opm.example.opm.repository.MemberRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
-@Controller
-@RequestMapping("/api/oauth")
+@RestController
 public class SignupController {
 
     private final MemberRepository memberRepository;
 
-    // 1. 회원가입 페이지 보여주기 (GET)
-    @GetMapping("/signup")
-    public String signupPage(@AuthenticationPrincipal OAuth2User oauthUser, Model model) {
-        // @AuthenticationPrincipal: 현재 로그인한 사용자의 정보를 가져옵니다.
+    // 회원가입 페이지 진입 시: 현재 구글 정보(이름, 이메일)를 JSON으로 줌
+    @GetMapping("/api/signup/info")
+    public ResponseEntity<?> getSignupInfo(@AuthenticationPrincipal OAuth2User oauthUser) {
+        if (oauthUser == null) return ResponseEntity.status(401).body("Unauthorized");
 
-        if (oauthUser != null) {
-            // 구글에서 가져온 속성들
-            String name = oauthUser.getAttribute("name");
-            String email = oauthUser.getAttribute("email");
+        String email = oauthUser.getAttribute("email");
+        String name = oauthUser.getAttribute("name");
 
-            // 모델에 담아서 HTML로 보냄 (자동 완성을 위해)
-            model.addAttribute("name", name);
-            model.addAttribute("email", email);
-        }
+        // JSON 반환: {"email": "...", "name": "..."}
+        Map<String, String> response = new HashMap<>();
+        response.put("email", email);
+        response.put("name", name);
 
-        return "signup-form"; // signup-form.html을 보여줘라
+        return ResponseEntity.ok(response);
     }
 
-    // 2. 회원가입 정보 받아서 처리하기 (POST)
-    @PostMapping("/signup")
-    public String signupProcess(@AuthenticationPrincipal OAuth2User oauthUser,
-                                @RequestParam("name") String name,
-                                @RequestParam("password") String password) {
+    // 회원가입 완료 요청
+    @PostMapping("/api/signup")
+    public ResponseEntity<?> signupProcess(@AuthenticationPrincipal OAuth2User oauthUser,
+                                           @RequestBody SignupRequestDto requestDto) { // JSON으로 받음
 
-        String email = oauthUser.getAttribute("email"); // 이메일은 변경 불가 (식별자)
-
-        // DB에서 회원 찾아서 정보 업데이트 (GUEST -> USER)
+        String email = oauthUser.getAttribute("email");
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
 
-        member.completeSignup(name, password); // 엔티티에 만든 편의 메서드 사용
-        memberRepository.save(member); // 변경사항 저장
+        member.completeSignup(requestDto.getName(), requestDto.getPassword());
+        memberRepository.save(member);
 
-        return "redirect:/"; // 메인 페이지로 이동
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "가입 완료");
+        response.put("redirectUrl", "/"); // 프론트가 이동할 곳
+
+        return ResponseEntity.ok(response);
     }
 }
