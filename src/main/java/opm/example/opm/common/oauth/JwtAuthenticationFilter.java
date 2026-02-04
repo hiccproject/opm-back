@@ -38,4 +38,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        // 아래 경로들에 대해서는 JWT 필터 로직을 수행하지 않고 다음 필터로 건너뜁니다.
+        return path.startsWith("/login/oauth2") ||
+                path.startsWith("/favicon.ico") ||
+                path.startsWith("/oauth2");
+    }
 }

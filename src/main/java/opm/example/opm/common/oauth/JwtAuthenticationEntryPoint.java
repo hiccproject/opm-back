@@ -20,4 +20,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         String json = "{\"code\": \"A003\", \"message\": \"인증이 필요합니다. 토큰을 확인해주세요.\"}";
         response.getWriter().print(json);
     }
+
+
 }
