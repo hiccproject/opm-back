@@ -21,7 +21,9 @@ public class Portfolio extends BaseTimeEntity {
     private Long PortfolioId;
 
     // Step 1: 직군 및 분야
-    private String category;    // 예: 개발, 디자인
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OccupationCategory category;
     private String subCategory; // 예: 백엔드, 프론트엔드
     private String profileImg;  // 프로필 사진 경로
 

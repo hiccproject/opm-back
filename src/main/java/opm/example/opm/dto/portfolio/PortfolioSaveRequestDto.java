@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import opm.example.opm.domain.portfolio.LayoutType;
+import opm.example.opm.domain.portfolio.OccupationCategory;
+
 import java.util.List;
 
 @Getter
@@ -14,7 +16,7 @@ import java.util.List;
 public class PortfolioSaveRequestDto {
 
     // Step 1: 직군 및 프로필
-    private String category;
+    private OccupationCategory category;
     private String subCategory;
     private String profileImg;
 
