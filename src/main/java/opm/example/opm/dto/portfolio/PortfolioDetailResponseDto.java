@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import opm.example.opm.domain.portfolio.LayoutType;
+import opm.example.opm.domain.portfolio.OccupationCategory;
 import opm.example.opm.domain.portfolio.Portfolio;
 
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PortfolioDetailResponseDto {
     private Long id;
-    private String category;
+    private OccupationCategory category;
     private String subCategory;
     private String profileImg;
     private String email;

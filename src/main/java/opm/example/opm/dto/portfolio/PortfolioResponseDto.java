@@ -3,6 +3,7 @@ package opm.example.opm.dto.portfolio;
 import lombok.Builder;
 import lombok.Getter;
 import opm.example.opm.domain.portfolio.LayoutType;
+import opm.example.opm.domain.portfolio.OccupationCategory;
 import opm.example.opm.domain.portfolio.Portfolio;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
 @Builder
 public class PortfolioResponseDto {
     private Long portfolioId;
-    private String category;
+    private OccupationCategory category;
     private String subCategory;
     private String profileImg;
     private String email;

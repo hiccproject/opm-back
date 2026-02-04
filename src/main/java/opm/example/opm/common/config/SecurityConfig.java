@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -69,6 +70,8 @@ public class SecurityConfig {
                                                 "/swagger-ui.html",
                                                 "/favicon.ico",
                                                 "/error",
+                                                "/login/**",
+                                                "/oauth2/**",
                                                 "/actuator/**",
                                                 "/api/members/**",
                                                 "/api/mail/**",
@@ -113,6 +116,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://www.onepageme.kr",
                 "https://onepageme.kr",
+                "https://api.onepageme.kr",
                 "http://localhost:3000"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
