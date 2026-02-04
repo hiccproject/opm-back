@@ -13,6 +13,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate redisTemplate;
+    private final S3Service s3Service; // S3 서비스 주입 ///////////////////////////////////////
 
     @Transactional
     public Long signup(SignupRequestDto requestDto) {
@@ -96,5 +100,48 @@ public class MemberService {
         // 인증 성공 후에는 Redis에서 인증번호를 삭제해 주는 것이 깔끔합니다.
         redisTemplate.delete(email);
     }
+
+    // ===============================================================
+
+
+
+    // 회원 탈퇴 (이메일로 삭제)
+    @Transactional
+    public void deleteMember(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
+
+        memberRepository.delete(member); // DB에서 삭제
+    }
+
+    // 계정 정보 수정 (이름 변경)
+    @Transactional
+    public void updateMember(String email, String newName) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
+
+        // 엔티티의 데이터를 변경
+        member.updateInfo(newName);
+
+        // ★ 중요: @Transactional이 붙어있다면,
+        // memberRepository.save(member)를 호출하지 않아도
+        // 메서드가 끝날 때 변경된 내용을 감지해서 DB에 자동으로 반영해줍니다. (Dirty Checking)
+    }
+
+    @Transactional
+    public void updateProfilePicture(String email, MultipartFile file) throws IOException {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
+
+        // 1. S3에 파일 업로드하고 URL 받아오기
+        String pictureUrl = s3Service.uploadImage(file); // ???????????????????????
+
+        // 2. DB에 이미지 URL 저장 (Dirty Checking)
+        member.updateProfile(pictureUrl);
+    }
+
+
+
+
 
 }
