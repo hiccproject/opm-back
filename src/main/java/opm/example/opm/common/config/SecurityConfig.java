@@ -39,8 +39,7 @@ public class SecurityConfig {
         http
                 // CSRF 비활성화 (JWT 사용으로 불필요)
                 .csrf(AbstractHttpConfigurer::disable)
-                // CORS 설정 (필요시 별도 설정)
-                .cors(AbstractHttpConfigurer::disable)
+                // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // H2 콘솔 사용을 위한 프레임 옵션 비활성화
@@ -122,6 +121,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
