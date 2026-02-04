@@ -21,6 +21,9 @@ public class Member {
     @Column(nullable = false)
     private String email;
 
+    @Column
+    private String picture; // 프로필 사진 URL 저장
+
     @Column // 비밀번호 필드 추가 (OAuth 회원은 처음엔 null일 수 있음)
     private String password;
 
@@ -55,6 +58,17 @@ public class Member {
         this.name = name;      // 이름 수정 가능하게
         this.password = password; // 비밀번호 저장
         this.role = Role.USER;    // 등급을 GUEST -> USER로 승격!
+    }
+
+
+    // updateProfile 메서드 추가 (나중에 사진 변경 시 사용)
+    public void updateProfile(String picture) {
+        this.picture = picture;
+    }
+
+    // updateInfo 메서드 추가 (닉네임 등 변경 시 사용)
+    public void updateInfo(String name) {
+        this.name = name;
     }
 
     // 비밀번호 변경 전용 메서드
