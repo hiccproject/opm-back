@@ -19,6 +19,9 @@ public class Project {
     @Column(length = 100)
     private String projectSummary; // 프젝 요약 (100자 이내)
 
+    @Column(length = 500)
+    private String projectImg; // 프젝 사진 경로
+
     private String projectLink;    // 프젝 링크
 
     @ManyToOne(fetch = FetchType.LAZY)
