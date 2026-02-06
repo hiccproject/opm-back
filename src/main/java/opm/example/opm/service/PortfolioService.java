@@ -105,6 +105,7 @@ public class PortfolioService {
                             .map(projectDto -> Project.builder()
                                     .projectName(projectDto.getProjectName())
                                     .projectSummary(projectDto.getProjectSummary())
+                                    .projectImg(projectDto.getProjectImg())
                                     .projectLink(projectDto.getProjectLink())
                                     .portfolio(portfolio) // 연관관계 편의 설정
                                     .build())
