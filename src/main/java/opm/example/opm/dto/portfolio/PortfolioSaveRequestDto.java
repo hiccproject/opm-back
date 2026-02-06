@@ -3,6 +3,7 @@ package opm.example.opm.dto.portfolio;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import opm.example.opm.domain.portfolio.LayoutType;
@@ -40,6 +41,7 @@ public class PortfolioSaveRequestDto {
     private String slug; // 사용자가 정할 커스텀 URL 주소
 
     @Getter
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ProjectDto {
@@ -48,6 +50,7 @@ public class PortfolioSaveRequestDto {
         @NotBlank(message = "프로젝트 설명은 필수입니다.")
         @Size(max = 200, message = "프로젝트 설명은 최대 200자까지 입력 가능합니다.")
         private String projectSummary;
+        private String projectImg;
         private String projectLink;
     }
 }

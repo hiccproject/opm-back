@@ -36,7 +36,7 @@ public class PortfolioResponseDto {
                 .layoutType(portfolio.getLayoutType())
                 .lastStep(portfolio.getLastStep())
                 .projects(portfolio.getProjects().stream()
-                        .map(p -> new PortfolioSaveRequestDto.ProjectDto(p.getProjectName(), p.getProjectSummary(), p.getProjectLink()))
+                        .map(p -> new PortfolioSaveRequestDto.ProjectDto(p.getProjectName(), p.getProjectSummary(),p.getProjectImg(), p.getProjectLink()))
                         .toList())
                 .build();
     }
