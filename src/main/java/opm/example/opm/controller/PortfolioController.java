@@ -64,8 +64,10 @@ public class PortfolioController {
 
     // 포트폴리오 공유 링크 생성
     @GetMapping("/{portfolioId}/share-link")
-    public ResponseEntity<ApiResponse<String>> getShareLink(@PathVariable Long portfolioId) {
-        String shareLink = portfolioService.generateShareLink(portfolioId);
+    public ResponseEntity<ApiResponse<String>> getShareLink(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable Long portfolioId) {
+        String shareLink = portfolioService.generateShareLink(memberDetails.getMember().getId(), portfolioId);
         return ResponseEntity.ok(ApiResponse.success(shareLink));
     }
 
@@ -95,5 +97,21 @@ public class PortfolioController {
             @PathVariable Long portfolioId) {
         portfolioService.deletePortfolio(memberDetails.getMember().getId(), portfolioId);
         return ResponseEntity.ok(ApiResponse.success("포트폴리오가 성공적으로 삭제되었습니다."));
+    }
+
+    // 포트폴리오 상태 변경 (공개/비공개)
+    @PatchMapping("/{portfolioId}/status")
+    public ResponseEntity<ApiResponse<String>> updatePortfolioStatus(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable Long portfolioId,
+            @RequestBody java.util.Map<String, String> request) {
+
+        String statusStr = request.get("status");
+        opm.example.opm.domain.portfolio.PortfolioStatus status = opm.example.opm.domain.portfolio.PortfolioStatus
+                .valueOf(statusStr.toUpperCase());
+
+        portfolioService.updateStatus(memberDetails.getMember().getId(), portfolioId, status);
+
+        return ResponseEntity.ok(ApiResponse.success("포트폴리오 상태가 변경되었습니다."));
     }
 }
