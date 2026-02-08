@@ -7,6 +7,7 @@ import opm.example.opm.domain.portfolio.PortfolioStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -15,6 +16,7 @@ public class MyPortfolioListResponseDto {
     private String title;
     private String profileImg;
     private PortfolioStatus status;
+    private List<String> tags;
     private Integer lastStep;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime updatedAt;
@@ -30,6 +32,7 @@ public class MyPortfolioListResponseDto {
                 portfolio.getCategory() + " - " + portfolio.getSubCategory(),
                 portfolio.getProfileImg(),
                 portfolio.getStatus(),
+                portfolio.getTags(),
                 portfolio.getLastStep(),
                 portfolio.getUpdatedAt() // 엔티티에 업데이트 시간 필드가 있다면 사용
         );
