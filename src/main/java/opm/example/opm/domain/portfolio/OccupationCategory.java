@@ -20,23 +20,27 @@ public enum OccupationCategory {
 
     private final String title;
 
-    OccupationCategory(String title) { this.title = title; }
+    OccupationCategory(String title) {
+        this.title = title;
+    }
 
-    public String getTitle() { return title; }
+    public String getTitle() {
+        return title;
+    }
 
     @JsonCreator
     public static OccupationCategory from(String value) {
-        if (value == null || value.trim().isEmpty() || value.equals("string")) {
+        // 아무것도 안 들어오면 무조건 null 리턴해서 전체 검색 모드로 진입
+        if (value == null || value.trim().isEmpty())
             return null;
-        }
 
+        String cleanValue = value.trim();
         for (OccupationCategory category : OccupationCategory.values()) {
-            // 영문 이름 혹은 한글 타이틀과 일치하는지 확인
-            if (category.name().equalsIgnoreCase(value.trim()) ||
-                    category.getTitle().equals(value.trim())) {
+            if (category.name().equalsIgnoreCase(cleanValue) ||
+                    category.title.contains(cleanValue)) { // 포함 여부로 변경 (예: "개발" -> "IT·개발")
                 return category;
             }
         }
-        return null; // 일치하는 게 없으면 에러 대신 null을 반환하여 전체 검색이 되게 함
+        return null; // 못 찾아도 에러 내지 말고 null 리턴
     }
 }
