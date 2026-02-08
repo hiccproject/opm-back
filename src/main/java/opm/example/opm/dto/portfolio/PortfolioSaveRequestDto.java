@@ -39,6 +39,7 @@ public class PortfolioSaveRequestDto {
     private LayoutType layoutType;
 
     private String slug; // 사용자가 정할 커스텀 URL 주소
+    private List<String> tags; // 포트폴리오와 연관된 태그 리스트
 
     @Getter
     @Builder

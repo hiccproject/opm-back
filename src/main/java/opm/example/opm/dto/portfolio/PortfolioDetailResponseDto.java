@@ -24,6 +24,7 @@ public class PortfolioDetailResponseDto {
     private List<PortfolioSaveRequestDto.ProjectDto> projects;
     private String summaryIntro;
     private LayoutType layoutType;
+    private List<String> tags;
 
     // 추가 관리 데이터
     private boolean isOwner;
@@ -43,6 +44,7 @@ public class PortfolioDetailResponseDto {
                 .phone(portfolio.getPhone())
                 .location(portfolio.getLocation())
                 .summaryIntro(portfolio.getSummaryIntro())
+                .tags(portfolio.getTags())
                 .layoutType(portfolio.getLayoutType())
                 .isOwner(isOwner)
                 .updatedAt(portfolio.getUpdatedAt())

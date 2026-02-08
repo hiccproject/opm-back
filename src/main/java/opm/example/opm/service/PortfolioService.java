@@ -1,24 +1,25 @@
 package opm.example.opm.service;
 
-
 import lombok.RequiredArgsConstructor;
 import opm.example.opm.common.oauth.MemberDetails;
 import opm.example.opm.domain.member.Member;
-import opm.example.opm.domain.portfolio.Portfolio;
-import opm.example.opm.domain.portfolio.PortfolioStatus;
-import opm.example.opm.domain.portfolio.PortfolioViewLog;
-import opm.example.opm.domain.portfolio.Project;
+import opm.example.opm.domain.portfolio.*;
 import opm.example.opm.dto.portfolio.MyPortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioDetailResponseDto;
+import opm.example.opm.dto.portfolio.PortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioSaveRequestDto;
 import opm.example.opm.repository.MemberRepository;
 import opm.example.opm.repository.PortfolioRepository;
 import opm.example.opm.repository.PortfolioViewLogRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+
 import java.util.List;
 
 @Service
@@ -51,6 +52,7 @@ public class PortfolioService {
                     .category(requestDto.getCategory())
                     .subCategory(requestDto.getSubCategory())
                     .profileImg(requestDto.getProfileImg())
+                    .tags(requestDto.getTags())
                     .status(PortfolioStatus.DRAFT)
                     .lastStep(step)
                     .build();
@@ -88,15 +90,21 @@ public class PortfolioService {
                     portfolio.updateSlug(dto.getSlug());
                 }
                 // Step 1: 기본 정보
-                if (dto.getCategory() != null) portfolio.setCategory(dto.getCategory());
-                if (dto.getSubCategory() != null) portfolio.setSubCategory(dto.getSubCategory());
-                if (dto.getProfileImg() != null) portfolio.setProfileImg(dto.getProfileImg());
+                if (dto.getCategory() != null)
+                    portfolio.setCategory(dto.getCategory());
+                if (dto.getSubCategory() != null)
+                    portfolio.setSubCategory(dto.getSubCategory());
+                if (dto.getProfileImg() != null)
+                    portfolio.setProfileImg(dto.getProfileImg());
             }
             case 2 -> {
                 // Step 2: 연락처 정보
-                if (dto.getEmail() != null) portfolio.setEmail(dto.getEmail());
-                if (dto.getPhone() != null) portfolio.setPhone(dto.getPhone());
-                if (dto.getLocation() != null) portfolio.setLocation(dto.getLocation());
+                if (dto.getEmail() != null)
+                    portfolio.setEmail(dto.getEmail());
+                if (dto.getPhone() != null)
+                    portfolio.setPhone(dto.getPhone());
+                if (dto.getLocation() != null)
+                    portfolio.setLocation(dto.getLocation());
             }
             case 3 -> {
                 // Step 3: 프로젝트 리스트 (교체 로직)
@@ -116,11 +124,23 @@ public class PortfolioService {
             }
             case 4 -> {
                 // Step 4: 소개글
-                if (dto.getSummaryIntro() != null) portfolio.setSummaryIntro(dto.getSummaryIntro());
+                if (dto.getSummaryIntro() != null)
+                    portfolio.setSummaryIntro(dto.getSummaryIntro());
+
+                // 태그 업데이트 (최대 5개 검증)
+                if (dto.getTags() != null) {
+                    if (dto.getTags().size() > 5) {
+                        throw new IllegalArgumentException("태그는 최대 5개까지만 등록 가능합니다.");
+                    }
+
+                    portfolio.getTags().clear();
+                    portfolio.getTags().addAll(dto.getTags());
+                }
             }
             case 5 -> {
                 // Step 5: 레이아웃 및 최종 발행
-                if (dto.getLayoutType() != null) portfolio.setLayoutType(dto.getLayoutType());
+                if (dto.getLayoutType() != null)
+                    portfolio.setLayoutType(dto.getLayoutType());
                 portfolio.publish(); // status = PUBLISHED
             }
             default -> throw new IllegalArgumentException("잘못된 단계 설정입니다: " + step);
@@ -181,5 +201,52 @@ public class PortfolioService {
 
         // 무조건 슬러그(랜덤값) 기반으로 링크 생성
         return domain + "/portfolio/" + portfolio.getSlug();
+    }
+
+    // 포트폴리오 목록 조회 (카테고리 및 태그별 필터링, 무한 스크롤, 정렬)
+    @Transactional(readOnly = true)
+    public Slice<PortfolioListResponseDto> getPortfolioList(List<String> categoryStrs, List<String> tags,
+            String sortStr,
+            Pageable pageable) {
+        // 정렬 조건 설정
+        Sort sort = switch (sortStr) {
+            case "OLDEST" -> Sort.by(Sort.Direction.ASC, "updatedAt");
+            case "POPULAR" -> Sort.by(Sort.Direction.DESC, "viewCount");
+            case "REALTIME" -> Sort.by(Sort.Direction.DESC, "todayViewCount");
+            default -> Sort.by(Sort.Direction.DESC, "updatedAt"); // LATEST
+        };
+
+        // Pageable 객체 재생성 (기존 page, size 유지 + 새로운 sort 적용)
+        Pageable sortedPageable = org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                sort);
+
+        List<OccupationCategory> categories = null;
+        if (categoryStrs != null && !categoryStrs.isEmpty()) {
+            categories = categoryStrs.stream()
+                    .map(OccupationCategory::from)
+                    .filter(java.util.Objects::nonNull) // null 제외
+                    .toList();
+
+            if (categories.isEmpty()) {
+                categories = null; // 유효한 카테고리가 없으면 전체 조회 (또는 빈 리스트로 검색 결과 0개 처리 가능, 여기선 null로 전체 조회 유도)
+            }
+        }
+
+        Slice<Portfolio> portfolioSlice = portfolioRepository.findPublishedPortfolios(categories, tags, sortedPageable);
+
+        return portfolioSlice.map(PortfolioListResponseDto::fromEntity);
+    }
+
+    // 포트폴리오 삭제 메서드
+    @Transactional
+    public void deletePortfolio(Long memberId, Long portfolioId) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다."));
+        if (!portfolio.getMember().getId().equals(memberId)) {
+            throw new IllegalStateException("권한이 없습니다.");
+        }
+        portfolioRepository.delete(portfolio);
     }
 }

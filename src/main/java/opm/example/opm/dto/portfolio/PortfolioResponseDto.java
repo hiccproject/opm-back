@@ -22,6 +22,7 @@ public class PortfolioResponseDto {
     private String summaryIntro;
     private LayoutType layoutType;
     private Integer lastStep;
+    private List<String> tags;
 
     public static PortfolioResponseDto fromEntity(Portfolio portfolio) {
         return PortfolioResponseDto.builder()
@@ -33,6 +34,7 @@ public class PortfolioResponseDto {
                 .phone(portfolio.getPhone())
                 .location(portfolio.getLocation())
                 .summaryIntro(portfolio.getSummaryIntro())
+                .tags(portfolio.getTags())
                 .layoutType(portfolio.getLayoutType())
                 .lastStep(portfolio.getLastStep())
                 .projects(portfolio.getProjects().stream()
