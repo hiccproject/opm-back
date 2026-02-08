@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import opm.example.opm.domain.portfolio.LayoutType;
+import opm.example.opm.domain.portfolio.OccupationCategory;
 import opm.example.opm.domain.portfolio.Portfolio;
 
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PortfolioDetailResponseDto {
     private Long id;
-    private String category;
+    private OccupationCategory category;
     private String subCategory;
     private String profileImg;
     private String email;
@@ -23,6 +24,7 @@ public class PortfolioDetailResponseDto {
     private List<PortfolioSaveRequestDto.ProjectDto> projects;
     private String summaryIntro;
     private LayoutType layoutType;
+    private List<String> tags;
 
     // 추가 관리 데이터
     private boolean isOwner;
@@ -42,11 +44,17 @@ public class PortfolioDetailResponseDto {
                 .phone(portfolio.getPhone())
                 .location(portfolio.getLocation())
                 .summaryIntro(portfolio.getSummaryIntro())
+                .tags(portfolio.getTags())
                 .layoutType(portfolio.getLayoutType())
                 .isOwner(isOwner)
                 .updatedAt(portfolio.getUpdatedAt())
                 .projects(portfolio.getProjects().stream()
-                        .map(p -> new PortfolioSaveRequestDto.ProjectDto(p.getProjectName(), p.getProjectSummary(), p.getProjectLink()))
+                        .map(p -> PortfolioSaveRequestDto.ProjectDto.builder()
+                                .projectName(p.getProjectName())
+                                .projectSummary(p.getProjectSummary())
+                                .projectImg(p.getProjectImg())
+                                .projectLink(p.getProjectLink())
+                                .build())
                         .toList())
                 .totalViewCount(isOwner ? portfolio.getViewCount() : null)
                 .todayViewCount(isOwner ? todayViewCount : null)

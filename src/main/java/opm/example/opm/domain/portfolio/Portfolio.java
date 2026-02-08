@@ -1,7 +1,7 @@
 package opm.example.opm.domain.portfolio;
 
-
 import jakarta.persistence.*;
+import org.hibernate.annotations.Formula;
 import lombok.*;
 import opm.example.opm.domain.member.Member;
 import java.util.ArrayList;
@@ -21,13 +21,15 @@ public class Portfolio extends BaseTimeEntity {
     private Long PortfolioId;
 
     // Step 1: 직군 및 분야
-    private String category;    // 예: 개발, 디자인
+    @Convert(converter = OccupationCategoryConverter.class)
+    @Column(nullable = false)
+    private OccupationCategory category;
     private String subCategory; // 예: 백엔드, 프론트엔드
-    private String profileImg;  // 프로필 사진 경로
+    private String profileImg; // 프로필 사진 경로
 
     // Step 2: 추가 정보
     private String email;
-    private String phone;    // 선택
+    private String phone; // 선택
     private String location; // 선택
 
     // Step 3: 프로젝트 리스트 (1:N 관계)
@@ -59,6 +61,13 @@ public class Portfolio extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    // 태그 리스트
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "PORTFOLIO_TAGS", joinColumns = @JoinColumn(name = "portfolio_id"))
+    @Column(name = "tag_name")
+    @Builder.Default
+    private List<String> tags = new ArrayList<>();
 
     // 편의 메서드: 프로젝트 리스트 교체
     public void updateProjects(List<Project> newProjects) {
@@ -92,5 +101,8 @@ public class Portfolio extends BaseTimeEntity {
         this.viewCount++;
     }
 
-}
+    // 일일 조회수 (정렬용 가상 컬럼)
+    @Formula("(SELECT COALESCE(SUM(l.daily_count), 0) FROM portfolio_view_log l WHERE l.portfolio_id = portfolio_id AND l.view_date = CURRENT_DATE)")
+    private int todayViewCount;
 
+}

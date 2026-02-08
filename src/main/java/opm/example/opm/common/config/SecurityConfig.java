@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,8 +39,7 @@ public class SecurityConfig {
         http
                 // CSRF 비활성화 (JWT 사용으로 불필요)
                 .csrf(AbstractHttpConfigurer::disable)
-                // CORS 설정 (필요시 별도 설정)
-                .cors(AbstractHttpConfigurer::disable)
+                // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // H2 콘솔 사용을 위한 프레임 옵션 비활성화
@@ -69,12 +69,16 @@ public class SecurityConfig {
                                                 "/swagger-ui.html",
                                                 "/favicon.ico",
                                                 "/error",
+                                                "/login/**",
+                                                "/oauth2/**",
                                                 "/actuator/**",
                                                 "/api/members/**",
                                                 "/api/mail/**",
                                                 "/api/auth/reissue",
                                                 "/css/**", "/images/**", "/js/**", "/h2-console/**",
                                                 "/terms")
+                                                "/api/portfolios/list",
+                                                "/css/**", "/images/**", "/js/**", "/h2-console/**")
                                         .permitAll()
                                         .requestMatchers("/signup").hasRole("GUEST") // GUEST만 /signup 접근 가능
                                         .requestMatchers("/api/signup/consent").hasRole("GUEST") // 추가된 부분 (GUEST만 동의 API 호출 가능)
@@ -115,11 +119,13 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://www.onepageme.kr",
                 "https://onepageme.kr",
+                "https://api.onepageme.kr",
                 "http://localhost:3000"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
