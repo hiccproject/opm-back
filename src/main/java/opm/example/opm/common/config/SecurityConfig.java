@@ -75,6 +75,7 @@ public class SecurityConfig {
                                                 "/api/members/**",
                                                 "/api/mail/**",
                                                 "/api/auth/reissue",
+                                                "/api/portfolios/list",
                                                 "/css/**", "/images/**", "/js/**", "/h2-console/**")
                                         .permitAll()
                                         .requestMatchers("/signup").hasRole("GUEST") // GUEST만 /signup 접근 가능
