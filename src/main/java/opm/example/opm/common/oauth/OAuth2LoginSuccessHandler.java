@@ -60,7 +60,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String targetUrl;
         if (isGuest) {
-            targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/signup")
+            targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/terms")
                     .queryParam("accessToken", accessToken)
                     .queryParam("refreshToken", refreshToken)
                     .build().toUriString();

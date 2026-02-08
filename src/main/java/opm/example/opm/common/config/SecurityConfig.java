@@ -73,9 +73,11 @@ public class SecurityConfig {
                                                 "/api/members/**",
                                                 "/api/mail/**",
                                                 "/api/auth/reissue",
-                                                "/css/**", "/images/**", "/js/**", "/h2-console/**")
+                                                "/css/**", "/images/**", "/js/**", "/h2-console/**",
+                                                "/terms")
                                         .permitAll()
                                         .requestMatchers("/signup").hasRole("GUEST") // GUEST만 /signup 접근 가능
+                                        .requestMatchers("/api/signup/consent").hasRole("GUEST") // 추가된 부분 (GUEST만 동의 API 호출 가능)
                                         .requestMatchers("/s3/**").permitAll() //S3 이미지 업로드 접근 허용
                                         .requestMatchers("/api/portfolios/my").authenticated() // 내 목록은 인증 필수
                                         .requestMatchers(HttpMethod.GET, "/api/portfolios/{id}").permitAll() // 상세 조회는 비회원 허용 예정

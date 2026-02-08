@@ -75,4 +75,10 @@ public class Member {
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+
+    // GUEST -> USER로 등급 변경
+    public void authorizeUser() {
+        this.role = Role.USER;
+    }
+
 }
