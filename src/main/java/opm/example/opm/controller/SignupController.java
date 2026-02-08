@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import opm.example.opm.dto.signup.ConsentRequestDto;
 import opm.example.opm.service.MemberService;
 import opm.example.opm.domain.member.Member;
-import opm.example.opm.dto.memberResponse.MemberResponseDto;
 import opm.example.opm.dto.signup.SignupRequestDto;
 import opm.example.opm.repository.MemberRepository;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +21,7 @@ public class SignupController {
 
     private final MemberRepository memberRepository;
     private final MemberService memberService;
+    private final opm.example.opm.common.oauth.JwtTokenProvider jwtTokenProvider;
 
     // 회원가입 페이지 진입 시: 현재 구글 정보(이름, 이메일)를 JSON으로 줌
     @GetMapping("/api/signup/info")

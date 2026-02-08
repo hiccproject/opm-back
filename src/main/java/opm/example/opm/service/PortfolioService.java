@@ -69,9 +69,14 @@ public class PortfolioService {
         }
 
         portfolio.setLastStep(step);
-        // 5단계일 때 발행 상태 변경
+        // 5단계이고 필수 요건 충족 시 발행
         if (step == 5) {
-            portfolio.publish();
+            try {
+                validateEssentials(portfolio);
+                portfolio.publish();
+            } catch (IllegalStateException e) {
+                // 필수 요건 미충족 시 DRAFT 유지
+            }
         }
 
         // 명시적으로 저장 후 ID 반환
@@ -141,7 +146,7 @@ public class PortfolioService {
                 // Step 5: 레이아웃 및 최종 발행
                 if (dto.getLayoutType() != null)
                     portfolio.setLayoutType(dto.getLayoutType());
-                portfolio.publish(); // status = PUBLISHED
+                // status change handled in saveStep main logic
             }
             default -> throw new IllegalArgumentException("잘못된 단계 설정입니다: " + step);
         }
@@ -195,9 +200,13 @@ public class PortfolioService {
 
     // 포트폴리오 공유 링크 생성
     @Transactional(readOnly = true)
-    public String generateShareLink(Long portfolioId) {
+    public String generateShareLink(Long memberId, Long portfolioId) {
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 명함입니다."));
+
+        if (!portfolio.getMember().getId().equals(memberId)) {
+            throw new IllegalStateException("본인의 명함 링크만 생성할 수 있습니다.");
+        }
 
         // 무조건 슬러그(랜덤값) 기반으로 링크 생성
         return domain + "/portfolio/" + portfolio.getSlug();
@@ -248,5 +257,39 @@ public class PortfolioService {
             throw new IllegalStateException("권한이 없습니다.");
         }
         portfolioRepository.delete(portfolio);
+    }
+
+    // 포트폴리오 상태 변경 (공개/비공개)
+    @Transactional
+    public void updateStatus(Long memberId, Long portfolioId, PortfolioStatus status) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다."));
+
+        if (!portfolio.getMember().getId().equals(memberId)) {
+            throw new IllegalStateException("권한이 없습니다.");
+        }
+
+        if (status == PortfolioStatus.PUBLISHED) {
+            validateEssentials(portfolio);
+        }
+
+        portfolio.setStatus(status);
+    }
+
+    // 발행을 위한 필수 데이터 검증
+    private void validateEssentials(Portfolio portfolio) {
+        // Step 1: 직군, 분야
+        if (portfolio.getCategory() == null || portfolio.getSubCategory() == null
+                || portfolio.getSubCategory().trim().isEmpty()) {
+            throw new IllegalStateException("1단계 필수 항목(직군/분야)이 누락되었습니다.");
+        }
+        // Step 2: 이메일 (전화번호, 위치, 프로필 이미지는 필수 아님)
+        if (portfolio.getEmail() == null || portfolio.getEmail().trim().isEmpty()) {
+            throw new IllegalStateException("2단계 필수 항목(이메일)이 누락되었습니다.");
+        }
+        // Step 5: 레이아웃
+        if (portfolio.getLayoutType() == null) {
+            throw new IllegalStateException("5단계 필수 항목(레이아웃)이 누락되었습니다.");
+        }
     }
 }
