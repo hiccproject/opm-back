@@ -142,6 +142,22 @@ public class MemberService {
 
 
 
+    // [회원가입 마무리] 약관 동의 및 정회원 승격
+    public void agreeToTerms(String email, boolean personalInfo, boolean serviceTerms) {
+        // 1. 회원 조회
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("회원 정보가 없습니다."));
+
+        // 2. 필수 약관 동의 확인 (백엔드에서도 한 번 더 검증)
+        if (!personalInfo || !serviceTerms) {
+            throw new IllegalArgumentException("필수 약관에 모두 동의해야 합니다.");
+        }
+
+        // 3. 역할 변경 (GUEST -> USER)
+        // Member 엔티티에 updateRole 메서드가 없다면 추가해주세요!
+        member.authorizeUser();
+    }
+
 
 
 }
