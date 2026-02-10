@@ -56,7 +56,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         // 배포 환경이면 https://onepageme.kr, 로컬이면 http://localhost:3000
         String baseUrl = (request.getServerName().equals("localhost"))
                 ? "http://localhost:3000"
-                : "https://onepageme.kr";
+                : "https://www.onepageme.kr";
 
         String targetUrl;
         if (isGuest) {
