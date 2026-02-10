@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import opm.example.opm.dto.passwordChange.PasswordChangeRequestDto;
 
 import java.io.IOException;
 
@@ -26,7 +27,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate redisTemplate;
-    private final S3Service s3Service; // S3 서비스 주입 ///////////////////////////////////////
+    private final S3Service s3Service; // S3 서비스 주입
 
     @Transactional
     public Long signup(SignupRequestDto requestDto) {
@@ -134,13 +135,27 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
 
         // 1. S3에 파일 업로드하고 URL 받아오기
-        String pictureUrl = s3Service.uploadImage(file); // ???????????????????????
+        String pictureUrl = s3Service.uploadImage(file);
 
         // 2. DB에 이미지 URL 저장 (Dirty Checking)
         member.updateProfile(pictureUrl);
     }
 
 
+    // 비밀번호 변경
+    @Transactional
+    public void updatePassword(String email, PasswordChangeRequestDto requestDto) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("회원 정보가 없습니다."));
+
+        // 1. 현재 비밀번호 검증
+        if (!passwordEncoder.matches(requestDto.getCurrentPassword(), member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 2. 새 비밀번호 암호화 및 변경
+        member.updatePassword(passwordEncoder.encode(requestDto.getNewPassword()));
+    }
 
     // [회원가입 마무리] 약관 동의 및 정회원 승격
     public void agreeToTerms(String email, boolean personalInfo, boolean serviceTerms) {

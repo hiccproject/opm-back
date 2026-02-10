@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.core.userdetails.UserDetails; // ★ 변경된 import
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import opm.example.opm.dto.passwordChange.PasswordChangeRequestDto;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -68,6 +69,27 @@ public class MyPageController {
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "프로필 사진이 변경되었습니다.");
+        response.put("redirectUrl", "/mypage");
+
+        return ResponseEntity.ok(response);
+    }
+
+    // [수정] 비밀번호 변경 API
+    @PatchMapping("/api/mypage/password")
+    public ResponseEntity<?> updatePassword(@AuthenticationPrincipal UserDetails userDetails,
+                                            @RequestBody PasswordChangeRequestDto requestDto) {
+
+        String email = userDetails.getUsername();
+
+        try {
+            memberService.updatePassword(email, requestDto);
+        } catch (IllegalArgumentException e) {
+            // 비밀번호 불일치 시 400 에러 반환
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "비밀번호가 변경되었습니다.");
         response.put("redirectUrl", "/mypage");
 
         return ResponseEntity.ok(response);
