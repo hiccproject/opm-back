@@ -5,14 +5,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import opm.example.opm.common.oauth.MemberDetails;
 import opm.example.opm.common.response.ApiResponse;
-import opm.example.opm.common.response.SliceResponse;
+import opm.example.opm.common.response.PagedResponse;
 
 import opm.example.opm.dto.portfolio.MyPortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioDetailResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioSaveRequestDto;
 import opm.example.opm.service.PortfolioService;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -73,19 +72,20 @@ public class PortfolioController {
 
     // 포트폴리오 목록 조회 (카테고리 및 태그별 필터링 가능)
     @GetMapping("/list")
-    public ResponseEntity<SliceResponse<PortfolioListResponseDto>> getListPortfolios(
+    public ResponseEntity<PagedResponse<PortfolioListResponseDto>> getListPortfolios(
             @Parameter(description = "직업 대분류 (예: DEVELOPMENT, DESIGN) - 다중 선택 가능", example = "[\"DEVELOPMENT\", \"DESIGN\"]") @RequestParam(value = "category", required = false) List<String> categories,
 
             @Parameter(description = "해시태그 검색 - 다중 선택 가능", example = "[\"java\", \"spring\"]") @RequestParam(value = "tag", required = false) List<String> tags,
             @Parameter(description = "정렬 기준 (LATEST: 최신순, OLDEST: 등록순, POPULAR: 전체 인기순, REALTIME: 일일 인기순)", example = "LATEST") @RequestParam(value = "sort", required = false, defaultValue = "LATEST") String sort,
-            @Parameter(hidden = true) @PageableDefault(size = 10) Pageable pageable) {
+            @org.springdoc.core.annotations.ParameterObject @PageableDefault(size = 10) Pageable pageable) {
 
-        // 1. 서비스에서 Slice<PortfolioListResponseDto>를 받아옵니다.
-        Slice<PortfolioListResponseDto> portfolioSlice = portfolioService.getPortfolioList(categories, tags, sort,
-                pageable);
+        // 1. 서비스에서 Page<PortfolioListResponseDto>를 받아옵니다.
+        org.springframework.data.domain.Page<PortfolioListResponseDto> portfolioPage = portfolioService
+                .getPortfolioList(categories, tags, sort,
+                        pageable);
 
-        // 2. SliceResponse.from 메서드를 사용하여 커스텀 응답 객체로 변환합니다.
-        SliceResponse<PortfolioListResponseDto> response = SliceResponse.from(portfolioSlice);
+        // 2. PagedResponse.from 메서드를 사용하여 커스텀 응답 객체로 변환합니다.
+        PagedResponse<PortfolioListResponseDto> response = PagedResponse.from(portfolioPage);
 
         return ResponseEntity.ok(response);
     }

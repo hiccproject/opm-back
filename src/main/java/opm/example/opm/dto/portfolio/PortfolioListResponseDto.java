@@ -12,6 +12,7 @@ public class PortfolioListResponseDto {
     private String categoryTitle;
     private String subCategory;
     private List<String> tags;
+    private String username;
     private LocalDateTime updatedAt;
 
     // Getter들 직접 작성 (Lombok 없이)
