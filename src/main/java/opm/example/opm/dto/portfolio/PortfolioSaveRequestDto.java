@@ -3,9 +3,12 @@ package opm.example.opm.dto.portfolio;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import opm.example.opm.domain.portfolio.LayoutType;
+import opm.example.opm.domain.portfolio.OccupationCategory;
+
 import java.util.List;
 
 @Getter
@@ -14,7 +17,7 @@ import java.util.List;
 public class PortfolioSaveRequestDto {
 
     // Step 1: 직군 및 프로필
-    private String category;
+    private OccupationCategory category;
     private String subCategory;
     private String profileImg;
 
@@ -36,8 +39,10 @@ public class PortfolioSaveRequestDto {
     private LayoutType layoutType;
 
     private String slug; // 사용자가 정할 커스텀 URL 주소
+    private List<String> tags; // 포트폴리오와 연관된 태그 리스트
 
     @Getter
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ProjectDto {
@@ -46,6 +51,7 @@ public class PortfolioSaveRequestDto {
         @NotBlank(message = "프로젝트 설명은 필수입니다.")
         @Size(max = 200, message = "프로젝트 설명은 최대 200자까지 입력 가능합니다.")
         private String projectSummary;
+        private String projectImg;
         private String projectLink;
     }
 }

@@ -3,6 +3,7 @@ package opm.example.opm.dto.portfolio;
 import lombok.Builder;
 import lombok.Getter;
 import opm.example.opm.domain.portfolio.LayoutType;
+import opm.example.opm.domain.portfolio.OccupationCategory;
 import opm.example.opm.domain.portfolio.Portfolio;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
 @Builder
 public class PortfolioResponseDto {
     private Long portfolioId;
-    private String category;
+    private OccupationCategory category;
     private String subCategory;
     private String profileImg;
     private String email;
@@ -21,6 +22,7 @@ public class PortfolioResponseDto {
     private String summaryIntro;
     private LayoutType layoutType;
     private Integer lastStep;
+    private List<String> tags;
 
     public static PortfolioResponseDto fromEntity(Portfolio portfolio) {
         return PortfolioResponseDto.builder()
@@ -32,10 +34,11 @@ public class PortfolioResponseDto {
                 .phone(portfolio.getPhone())
                 .location(portfolio.getLocation())
                 .summaryIntro(portfolio.getSummaryIntro())
+                .tags(portfolio.getTags())
                 .layoutType(portfolio.getLayoutType())
                 .lastStep(portfolio.getLastStep())
                 .projects(portfolio.getProjects().stream()
-                        .map(p -> new PortfolioSaveRequestDto.ProjectDto(p.getProjectName(), p.getProjectSummary(), p.getProjectLink()))
+                        .map(p -> new PortfolioSaveRequestDto.ProjectDto(p.getProjectName(), p.getProjectSummary(),p.getProjectImg(), p.getProjectLink()))
                         .toList())
                 .build();
     }
