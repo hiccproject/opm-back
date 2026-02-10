@@ -19,13 +19,12 @@ public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
 
         boolean existsBySlug(String slug);
 
-        // 카테고리 및 태그 필터링 조회 (무한 스크롤 & 다중 선택)
-        // 카테고리 및 태그 필터링 조회 (무한 스크롤 & 다중 선택)
+        // 카테고리 및 태그 필터링 조회 (무한 스크롤 & 다중 선택) -> 페이지네이션으로 변경
         @Query("SELECT p FROM Portfolio p " +
                         "WHERE p.status = 'PUBLISHED' " +
                         "AND (:categories IS NULL OR p.category IN :categories) " +
                         "AND (:tags IS NULL OR EXISTS (SELECT t FROM p.tags t WHERE t IN :tags))")
-        org.springframework.data.domain.Slice<Portfolio> findPublishedPortfolios(
+        org.springframework.data.domain.Page<Portfolio> findPublishedPortfolios(
                         @Param("categories") List<OccupationCategory> categories,
                         @Param("tags") List<String> tags,
                         Pageable pageable);

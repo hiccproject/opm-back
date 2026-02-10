@@ -12,7 +12,7 @@ import opm.example.opm.repository.MemberRepository;
 import opm.example.opm.repository.PortfolioRepository;
 import opm.example.opm.repository.PortfolioViewLogRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Slice;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -212,9 +212,10 @@ public class PortfolioService {
         return domain + "/portfolio/" + portfolio.getSlug();
     }
 
-    // 포트폴리오 목록 조회 (카테고리 및 태그별 필터링, 무한 스크롤, 정렬)
+    // 포트폴리오 목록 조회 (카테고리 및 태그별 필터링, 페이지네이션, 정렬)
     @Transactional(readOnly = true)
-    public Slice<PortfolioListResponseDto> getPortfolioList(List<String> categoryStrs, List<String> tags,
+    public org.springframework.data.domain.Page<PortfolioListResponseDto> getPortfolioList(List<String> categoryStrs,
+            List<String> tags,
             String sortStr,
             Pageable pageable) {
         // 정렬 조건 설정
@@ -239,13 +240,14 @@ public class PortfolioService {
                     .toList();
 
             if (categories.isEmpty()) {
-                categories = null; // 유효한 카테고리가 없으면 전체 조회 (또는 빈 리스트로 검색 결과 0개 처리 가능, 여기선 null로 전체 조회 유도)
+                categories = null; // 유효한 카테고리가 없으면 전체 조회
             }
         }
 
-        Slice<Portfolio> portfolioSlice = portfolioRepository.findPublishedPortfolios(categories, tags, sortedPageable);
+        org.springframework.data.domain.Page<Portfolio> portfolioPage = portfolioRepository
+                .findPublishedPortfolios(categories, tags, sortedPageable);
 
-        return portfolioSlice.map(PortfolioListResponseDto::fromEntity);
+        return portfolioPage.map(PortfolioListResponseDto::fromEntity);
     }
 
     // 포트폴리오 삭제 메서드
