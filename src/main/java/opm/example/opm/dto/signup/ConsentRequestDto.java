@@ -13,6 +13,9 @@ public class ConsentRequestDto {
     // 이용약관 동의 (필수)
     private boolean serviceTermsAgreement;
 
+    // 이름 (필수)
+    private String name;
+
     // 마케팅 수신 동의 (선택)
     // private boolean marketingAgreement;
 }

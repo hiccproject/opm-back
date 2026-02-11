@@ -62,7 +62,6 @@ public class MemberService {
         return member.getId();
     }
 
-
     // MemberService.java
     @Transactional
     public LoginResponseDto login(LoginRequestDto requestDto) {
@@ -72,7 +71,6 @@ public class MemberService {
 
         // 2. 일치 여부 검사
         boolean isMatch = passwordEncoder.matches(requestDto.getPassword(), member.getPassword());
-
 
         if (!isMatch) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
@@ -103,8 +101,6 @@ public class MemberService {
     }
 
     // ===============================================================
-
-
 
     // 회원 탈퇴 (이메일로 삭제)
     @Transactional
@@ -141,7 +137,6 @@ public class MemberService {
         member.updateProfile(pictureUrl);
     }
 
-
     // 비밀번호 변경
     @Transactional
     public void updatePassword(String email, PasswordChangeRequestDto requestDto) {
@@ -158,7 +153,7 @@ public class MemberService {
     }
 
     // [회원가입 마무리] 약관 동의 및 정회원 승격
-    public void agreeToTerms(String email, boolean personalInfo, boolean serviceTerms) {
+    public void agreeToTerms(String email, boolean personalInfo, boolean serviceTerms, String name) {
         // 1. 회원 조회
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원 정보가 없습니다."));
@@ -168,11 +163,16 @@ public class MemberService {
             throw new IllegalArgumentException("필수 약관에 모두 동의해야 합니다.");
         }
 
+        // 3. 이름 저장 (업데이트)
+        if (name != null && !name.trim().isEmpty()) {
+            member.updateInfo(name);
+        } else {
+            throw new IllegalArgumentException("이름은 필수 입력값입니다.");
+        }
+
         // 3. 역할 변경 (GUEST -> USER)
         // Member 엔티티에 updateRole 메서드가 없다면 추가해주세요!
         member.authorizeUser();
     }
-
-
 
 }
