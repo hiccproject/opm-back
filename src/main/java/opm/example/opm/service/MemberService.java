@@ -153,6 +153,7 @@ public class MemberService {
     }
 
     // [회원가입 마무리] 약관 동의 및 정회원 승격
+    @Transactional
     public void agreeToTerms(String email, boolean personalInfo, boolean serviceTerms, String name) {
         // 1. 회원 조회
         Member member = memberRepository.findByEmail(email)
