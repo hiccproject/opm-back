@@ -164,8 +164,8 @@ public class PortfolioService {
     // 포트폴리오 상세 조회
     @Transactional
     public PortfolioDetailResponseDto getPortfolioDetail(String slug, MemberDetails memberDetails) {
-        // 1. ID가 아닌 slug로 조회
-        Portfolio portfolio = portfolioRepository.findBySlug(slug)
+        // 1. ID가 아닌 slug로 조회 (findTopBySlug로 변경)
+        Portfolio portfolio = portfolioRepository.findTopBySlug(slug)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 명함 주소입니다."));
 
         Long currentMemberId = (memberDetails != null) ? memberDetails.getMember().getId() : null;
