@@ -183,7 +183,7 @@ public class PortfolioService {
 
             // 2. 일일 조회수 증가 로직
             LocalDate today = LocalDate.now();
-            PortfolioViewLog viewLog = viewLogRepository.findByPortfolioAndViewDate(portfolio, today)
+            PortfolioViewLog viewLog = viewLogRepository.findTopByPortfolioAndViewDate(portfolio, today)
                     .orElseGet(() -> viewLogRepository.save(new PortfolioViewLog(portfolio, today)));
 
             if (viewLog.getId() != null) { // 방금 생성된 것이 아니라면 증가
@@ -192,7 +192,7 @@ public class PortfolioService {
         }
 
         // ResponseDto에 오늘 조회수와 전체 조회수를 모두 담아 반환
-        Integer todayCount = viewLogRepository.findByPortfolioAndViewDate(portfolio, LocalDate.now())
+        Integer todayCount = viewLogRepository.findTopByPortfolioAndViewDate(portfolio, LocalDate.now())
                 .map(PortfolioViewLog::getDailyCount).orElse(0);
 
         return PortfolioDetailResponseDto.fromEntity(portfolio, isOwner, todayCount);

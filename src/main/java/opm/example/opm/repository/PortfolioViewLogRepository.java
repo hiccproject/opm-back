@@ -8,5 +8,5 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public interface PortfolioViewLogRepository extends JpaRepository<PortfolioViewLog, Long> {
-    Optional<PortfolioViewLog> findByPortfolioAndViewDate(Portfolio portfolio, LocalDate viewDate);
+    Optional<PortfolioViewLog> findTopByPortfolioAndViewDate(Portfolio portfolio, LocalDate viewDate);
 }
