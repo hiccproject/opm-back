@@ -19,59 +19,58 @@ import java.io.IOException;
 @Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final JwtTokenProvider jwtTokenProvider;
-    private final MemberRepository memberRepository;
+        private final JwtTokenProvider jwtTokenProvider;
+        private final MemberRepository memberRepository;
 
-    @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+        @Override
+        public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                        Authentication authentication) throws IOException, ServletException {
 
-        // 1. 로그인한 사용자 정보 가져오기
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        String email = oAuth2User.getAttribute("email"); // 구글에서 제공하는 이메일 추출
+                // 1. 로그인한 사용자 정보 가져오기
+                OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+                String email = oAuth2User.getAttribute("email"); // 구글에서 제공하는 이메일 추출
 
-        // 2. 토큰 생성
-        String accessToken = jwtTokenProvider.createAccessToken(email);
-        String refreshToken = jwtTokenProvider.createRefreshToken(email);
+                // 2. 토큰 생성
+                String accessToken = jwtTokenProvider.createAccessToken(email);
+                String refreshToken = jwtTokenProvider.createRefreshToken(email);
 
-        // 3. DB에 RefreshToken 저장
-        Member member = memberRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    Member newMember = Member.builder()
-                            .email(email)
-                            .role(Role.GUEST) // 초기 권한은 GUEST로 설정
-                            .build();
-                    return memberRepository.save(newMember);
-                });
+                // 3. DB에 RefreshToken 저장
+                Member member = memberRepository.findByEmail(email)
+                                .orElseGet(() -> {
+                                        Member newMember = Member.builder()
+                                                        .email(email)
+                                                        .role(Role.GUEST) // 초기 권한은 GUEST로 설정
+                                                        .build();
+                                        return memberRepository.save(newMember);
+                                });
 
-        member.updateRefreshToken(refreshToken);
-        memberRepository.save(member); // DB 반영
+                member.updateRefreshToken(refreshToken);
+                memberRepository.save(member); // DB 반영
 
-        // 4. 사용자의 권한(Role) 확인하기
-        // 우리가 만든 Role.GUEST의 key는 "ROLE_GUEST"입니다.
-        boolean isGuest = oAuth2User.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals(Role.GUEST.getKey()));
+                // 5. 역할에 따른 리다이렉트 (페이지 이동)
+                // 우리가 만든 Role.GUEST의 key는 "ROLE_GUEST"입니다.
+                boolean isGuest = member.getRole() == Role.GUEST;
 
+                // 5. 역할에 따른 리다이렉트 (페이지 이동)
+                // 배포 환경이면 https://onepageme.kr, 로컬이면 http://localhost:3000
+                String baseUrl = (request.getServerName().equals("localhost"))
+                                ? "http://localhost:3000"
+                                : "https://www.onepageme.kr";
 
-        // 5. 역할에 따른 리다이렉트 (페이지 이동)
-        // 배포 환경이면 https://onepageme.kr, 로컬이면 http://localhost:3000
-        String baseUrl = (request.getServerName().equals("localhost"))
-                ? "http://localhost:3000"
-                : "https://www.onepageme.kr";
+                String targetUrl;
+                if (isGuest) {
+                        targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/terms")
+                                        .queryParam("accessToken", accessToken)
+                                        .queryParam("refreshToken", refreshToken)
+                                        .build().toUriString();
+                } else {
+                        targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/")
+                                        .queryParam("accessToken", accessToken)
+                                        .queryParam("refreshToken", refreshToken)
+                                        .build().toUriString();
+                }
 
-        String targetUrl;
-        if (isGuest) {
-            targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/terms")
-                    .queryParam("accessToken", accessToken)
-                    .queryParam("refreshToken", refreshToken)
-                    .build().toUriString();
-        } else {
-            targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/")
-                    .queryParam("accessToken", accessToken)
-                    .queryParam("refreshToken", refreshToken)
-                    .build().toUriString();
+                // 6. 실제로 리다이렉트를 실행
+                response.sendRedirect(targetUrl);
         }
-
-        // 6. 실제로 리다이렉트를 실행
-        response.sendRedirect(targetUrl);
-    }
 }
