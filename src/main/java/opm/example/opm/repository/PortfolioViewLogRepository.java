@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface PortfolioViewLogRepository extends JpaRepository<PortfolioViewLog, Long> {
     Optional<PortfolioViewLog> findTopByPortfolioAndViewDate(Portfolio portfolio, LocalDate viewDate);
+
+    void deleteByPortfolio(Portfolio portfolio);
 }
