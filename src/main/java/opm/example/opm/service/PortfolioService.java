@@ -258,6 +258,10 @@ public class PortfolioService {
         if (!portfolio.getMember().getId().equals(memberId)) {
             throw new IllegalStateException("권한이 없습니다.");
         }
+
+        // 연관된 조회수 로그 먼저 삭제 (FK 제약조건 해결)
+        viewLogRepository.deleteByPortfolio(portfolio);
+
         portfolioRepository.delete(portfolio);
     }
 
