@@ -139,6 +139,16 @@ public class PortfolioController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    // 내가 좋아요한 포트폴리오 목록 조회
+    @GetMapping("/likes")
+    public ResponseEntity<PagedResponse<PortfolioListResponseDto>> getLikedPortfolios(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @org.springdoc.core.annotations.ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        org.springframework.data.domain.Page<PortfolioListResponseDto> portfolioPage = portfolioService
+                .getLikedPortfolios(memberDetails.getMember().getId(), pageable);
+        return ResponseEntity.ok(PagedResponse.from(portfolioPage));
+    }
+
     // 내가 스크랩한 포트폴리오 목록 조회
     @GetMapping("/scraps")
     public ResponseEntity<PagedResponse<PortfolioListResponseDto>> getScrapedPortfolios(

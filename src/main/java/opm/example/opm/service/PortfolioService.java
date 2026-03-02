@@ -388,6 +388,22 @@ public class PortfolioService {
                 .build();
     }
 
+    // 내가 좋아요한 포트폴리오 목록 조회
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<PortfolioListResponseDto> getLikedPortfolios(Long memberId,
+                                                                                             Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        org.springframework.data.domain.Page<Portfolio> portfolioPage = portfolioLikeRepository
+                .findLikedPortfoliosByMemberId(member.getId(), pageable);
+
+        return portfolioPage.map(p -> {
+            boolean isScraped = portfolioScrapRepository.existsByMemberAndPortfolio(member, p);
+            return PortfolioListResponseDto.fromEntity(p, true, isScraped); // 좋아요 리스트이므로 isLiked는 무조건 true
+        });
+    }
+
     // 내가 스크랩한 포트폴리오 목록 조회
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<PortfolioListResponseDto> getScrapedPortfolios(Long memberId,
