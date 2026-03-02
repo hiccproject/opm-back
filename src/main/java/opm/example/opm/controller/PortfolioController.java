@@ -11,6 +11,7 @@ import opm.example.opm.dto.portfolio.MyPortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioDetailResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioSaveRequestDto;
+import opm.example.opm.dto.portfolio.PortfolioReactionResponseDto;
 import opm.example.opm.service.PortfolioService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -73,15 +74,18 @@ public class PortfolioController {
     // 포트폴리오 목록 조회 (카테고리 및 태그별 필터링 가능)
     @GetMapping("/list")
     public ResponseEntity<PagedResponse<PortfolioListResponseDto>> getListPortfolios(
+            @AuthenticationPrincipal MemberDetails memberDetails,
             @Parameter(description = "직업 대분류 (예: DEVELOPMENT, DESIGN) - 다중 선택 가능", example = "[\"DEVELOPMENT\", \"DESIGN\"]") @RequestParam(value = "category", required = false) List<String> categories,
 
             @Parameter(description = "해시태그 검색 - 다중 선택 가능", example = "[\"java\", \"spring\"]") @RequestParam(value = "tag", required = false) List<String> tags,
             @Parameter(description = "정렬 기준 (LATEST: 최신순, OLDEST: 등록순, POPULAR: 전체 인기순, REALTIME: 일일 인기순)", example = "LATEST") @RequestParam(value = "sort", required = false, defaultValue = "LATEST") String sort,
             @org.springdoc.core.annotations.ParameterObject @PageableDefault(size = 10) Pageable pageable) {
 
+        Long memberId = (memberDetails != null) ? memberDetails.getMember().getId() : null;
+
         // 1. 서비스에서 Page<PortfolioListResponseDto>를 받아옵니다.
         org.springframework.data.domain.Page<PortfolioListResponseDto> portfolioPage = portfolioService
-                .getPortfolioList(categories, tags, sort,
+                .getPortfolioList(memberId, categories, tags, sort,
                         pageable);
 
         // 2. PagedResponse.from 메서드를 사용하여 커스텀 응답 객체로 변환합니다.
@@ -113,5 +117,35 @@ public class PortfolioController {
         portfolioService.updateStatus(memberDetails.getMember().getId(), portfolioId, status);
 
         return ResponseEntity.ok(ApiResponse.success("포트폴리오 상태가 변경되었습니다."));
+    }
+
+    // 좋아요 토글
+    @PostMapping("/{portfolioId}/likes")
+    public ResponseEntity<ApiResponse<PortfolioReactionResponseDto>> toggleLike(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable Long portfolioId) {
+        PortfolioReactionResponseDto response = portfolioService.toggleLike(memberDetails.getMember().getId(),
+                portfolioId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    // 스크랩 토글
+    @PostMapping("/{portfolioId}/scraps")
+    public ResponseEntity<ApiResponse<PortfolioReactionResponseDto>> toggleScrap(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable Long portfolioId) {
+        PortfolioReactionResponseDto response = portfolioService.toggleScrap(memberDetails.getMember().getId(),
+                portfolioId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    // 내가 스크랩한 포트폴리오 목록 조회
+    @GetMapping("/scraps")
+    public ResponseEntity<PagedResponse<PortfolioListResponseDto>> getScrapedPortfolios(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @org.springdoc.core.annotations.ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        org.springframework.data.domain.Page<PortfolioListResponseDto> portfolioPage = portfolioService
+                .getScrapedPortfolios(memberDetails.getMember().getId(), pageable);
+        return ResponseEntity.ok(PagedResponse.from(portfolioPage));
     }
 }

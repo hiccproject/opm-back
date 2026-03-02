@@ -105,4 +105,12 @@ public class Portfolio extends BaseTimeEntity {
     @Formula("(SELECT COALESCE(SUM(l.daily_count), 0) FROM portfolio_view_log l WHERE l.portfolio_id = portfolio_id AND l.view_date = CURRENT_DATE)")
     private int todayViewCount;
 
+    // 좋아요 수 (가상 컬럼)
+    @Formula("(SELECT COUNT(*) FROM portfolio_likes l WHERE l.portfolio_id = portfolio_id)")
+    private int likeCount;
+
+    // 스크랩 수 (가상 컬럼)
+    @Formula("(SELECT COUNT(*) FROM portfolio_scraps s WHERE s.portfolio_id = portfolio_id)")
+    private int scrapCount;
+
 }
