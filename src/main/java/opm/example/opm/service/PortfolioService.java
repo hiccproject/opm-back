@@ -8,6 +8,9 @@ import opm.example.opm.dto.portfolio.MyPortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioDetailResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioListResponseDto;
 import opm.example.opm.dto.portfolio.PortfolioSaveRequestDto;
+import opm.example.opm.dto.portfolio.PortfolioReactionResponseDto;
+import opm.example.opm.repository.PortfolioLikeRepository;
+import opm.example.opm.repository.PortfolioScrapRepository;
 import opm.example.opm.repository.MemberRepository;
 import opm.example.opm.repository.PortfolioRepository;
 import opm.example.opm.repository.PortfolioViewLogRepository;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -30,6 +34,8 @@ public class PortfolioService {
     private final PortfolioRepository portfolioRepository;
     private final MemberRepository memberRepository;
     private final PortfolioViewLogRepository viewLogRepository;
+    private final PortfolioLikeRepository portfolioLikeRepository;
+    private final PortfolioScrapRepository portfolioScrapRepository;
 
     @Value("${app.domain}")
     private String domain;
@@ -195,7 +201,17 @@ public class PortfolioService {
         Integer todayCount = viewLogRepository.findTopByPortfolioAndViewDate(portfolio, LocalDate.now())
                 .map(PortfolioViewLog::getDailyCount).orElse(0);
 
-        return PortfolioDetailResponseDto.fromEntity(portfolio, isOwner, todayCount);
+        boolean isLiked = false;
+        boolean isScraped = false;
+        if (currentMemberId != null) {
+            Member member = memberRepository.findById(currentMemberId).orElse(null);
+            if (member != null) {
+                isLiked = portfolioLikeRepository.existsByMemberAndPortfolio(member, portfolio);
+                isScraped = portfolioScrapRepository.existsByMemberAndPortfolio(member, portfolio);
+            }
+        }
+
+        return PortfolioDetailResponseDto.fromEntity(portfolio, isOwner, todayCount, isLiked, isScraped);
     }
 
     // 포트폴리오 공유 링크 생성
@@ -214,7 +230,9 @@ public class PortfolioService {
 
     // 포트폴리오 목록 조회 (카테고리 및 태그별 필터링, 페이지네이션, 정렬)
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<PortfolioListResponseDto> getPortfolioList(List<String> categoryStrs,
+    public org.springframework.data.domain.Page<PortfolioListResponseDto> getPortfolioList(
+            Long memberId,
+            List<String> categoryStrs,
             List<String> tags,
             String sortStr,
             Pageable pageable) {
@@ -247,7 +265,17 @@ public class PortfolioService {
         org.springframework.data.domain.Page<Portfolio> portfolioPage = portfolioRepository
                 .findPublishedPortfolios(categories, tags, sortedPageable);
 
-        return portfolioPage.map(PortfolioListResponseDto::fromEntity);
+        Member member = memberId != null ? memberRepository.findById(memberId).orElse(null) : null;
+
+        return portfolioPage.map(p -> {
+            boolean isLiked = false;
+            boolean isScraped = false;
+            if (member != null) {
+                isLiked = portfolioLikeRepository.existsByMemberAndPortfolio(member, p);
+                isScraped = portfolioScrapRepository.existsByMemberAndPortfolio(member, p);
+            }
+            return PortfolioListResponseDto.fromEntity(p, isLiked, isScraped);
+        });
     }
 
     // 포트폴리오 삭제 메서드
@@ -280,6 +308,100 @@ public class PortfolioService {
         }
 
         portfolio.setStatus(status);
+    }
+
+    // 좋아요 토글
+    @Transactional
+    public PortfolioReactionResponseDto toggleLike(Long memberId, Long portfolioId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다."));
+
+        Optional<PortfolioLike> existingLike = portfolioLikeRepository.findByMemberAndPortfolio(member, portfolio);
+
+        boolean isLiked;
+        if (existingLike.isPresent()) {
+            portfolioLikeRepository.delete(existingLike.get());
+            isLiked = false;
+        } else {
+            PortfolioLike newLike = PortfolioLike.builder()
+                    .member(member)
+                    .portfolio(portfolio)
+                    .build();
+            portfolioLikeRepository.save(newLike);
+            isLiked = true;
+        }
+
+        // 엔티티가 영속상태이므로 flush하여 업데이트된 count를 반영하거나 수동으로 조회하도록 함.
+        portfolioLikeRepository.flush(); // To ensure count is updated, although @Formula counts are queried on fetch.
+        // 강제로 다시 가져올수도 있으나 그냥 저장된 count에 +-1 해주는게 빠름
+
+        // 하지만 @Formula는 엔티티를 다시 조회해야 갱신됩니다. 성능을 위해 수동 계산
+        int currentCount = portfolio.getLikeCount();
+        int newLikeCount = isLiked ? currentCount + 1 : currentCount - 1;
+
+        boolean isScraped = portfolioScrapRepository.existsByMemberAndPortfolio(member, portfolio);
+
+        return PortfolioReactionResponseDto.builder()
+                .isLiked(isLiked)
+                .likeCount(newLikeCount)
+                .isScraped(isScraped)
+                .scrapCount(portfolio.getScrapCount())
+                .build();
+    }
+
+    // 스크랩 토글
+    @Transactional
+    public PortfolioReactionResponseDto toggleScrap(Long memberId, Long portfolioId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다."));
+
+        Optional<PortfolioScrap> existingScrap = portfolioScrapRepository.findByMemberAndPortfolio(member, portfolio);
+
+        boolean isScraped;
+        if (existingScrap.isPresent()) {
+            portfolioScrapRepository.delete(existingScrap.get());
+            isScraped = false;
+        } else {
+            PortfolioScrap newScrap = PortfolioScrap.builder()
+                    .member(member)
+                    .portfolio(portfolio)
+                    .build();
+            portfolioScrapRepository.save(newScrap);
+            isScraped = true;
+        }
+
+        portfolioScrapRepository.flush();
+        int currentCount = portfolio.getScrapCount();
+        int newScrapCount = isScraped ? currentCount + 1 : currentCount - 1;
+
+        boolean isLiked = portfolioLikeRepository.existsByMemberAndPortfolio(member, portfolio);
+
+        return PortfolioReactionResponseDto.builder()
+                .isLiked(isLiked)
+                .likeCount(portfolio.getLikeCount())
+                .isScraped(isScraped)
+                .scrapCount(newScrapCount)
+                .build();
+    }
+
+    // 내가 스크랩한 포트폴리오 목록 조회
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<PortfolioListResponseDto> getScrapedPortfolios(Long memberId,
+            Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        org.springframework.data.domain.Page<Portfolio> portfolioPage = portfolioScrapRepository
+                .findScrapedPortfoliosByMemberId(member.getId(), pageable);
+
+        return portfolioPage.map(p -> {
+            boolean isLiked = portfolioLikeRepository.existsByMemberAndPortfolio(member, p);
+            return PortfolioListResponseDto.fromEntity(p, isLiked, true); // 스크랩 리스트이므로 isScraped는 무조건 true
+        });
     }
 
     // 발행을 위한 필수 데이터 검증

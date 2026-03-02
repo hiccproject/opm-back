@@ -35,8 +35,14 @@ public class PortfolioDetailResponseDto {
         private Integer todayViewCount; // 오늘 하루 조회수
         private String username;
 
+        // 좋아요 및 스크랩 관련 필드
+        private int likeCount;
+        private int scrapCount;
+        private boolean isLiked;
+        private boolean isScraped;
+
         public static PortfolioDetailResponseDto fromEntity(Portfolio portfolio, boolean isOwner,
-                        Integer todayViewCount) {
+                        Integer todayViewCount, boolean isLiked, boolean isScraped) {
                 return PortfolioDetailResponseDto.builder()
                                 .id(portfolio.getPortfolioId())
                                 .username(portfolio.getMember().getName())
@@ -61,6 +67,10 @@ public class PortfolioDetailResponseDto {
                                                 .toList())
                                 .totalViewCount(isOwner ? portfolio.getViewCount() : null)
                                 .todayViewCount(isOwner ? todayViewCount : null)
+                                .likeCount(portfolio.getLikeCount())
+                                .scrapCount(portfolio.getScrapCount())
+                                .isLiked(isLiked)
+                                .isScraped(isScraped)
                                 .build();
         }
 }
