@@ -120,22 +120,22 @@ public class PortfolioController {
     }
 
     // 좋아요 토글
-    @PostMapping("/{portfolioId}/likes")
+    @PostMapping("/{slug}/likes")
     public ResponseEntity<ApiResponse<PortfolioReactionResponseDto>> toggleLike(
             @AuthenticationPrincipal MemberDetails memberDetails,
-            @PathVariable Long portfolioId) {
+            @PathVariable String slug) {
         PortfolioReactionResponseDto response = portfolioService.toggleLike(memberDetails.getMember().getId(),
-                portfolioId);
+                slug);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // 스크랩 토글
-    @PostMapping("/{portfolioId}/scraps")
+    @PostMapping("/{slug}/scraps")
     public ResponseEntity<ApiResponse<PortfolioReactionResponseDto>> toggleScrap(
             @AuthenticationPrincipal MemberDetails memberDetails,
-            @PathVariable Long portfolioId) {
+            @PathVariable String slug) {
         PortfolioReactionResponseDto response = portfolioService.toggleScrap(memberDetails.getMember().getId(),
-                portfolioId);
+                slug);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

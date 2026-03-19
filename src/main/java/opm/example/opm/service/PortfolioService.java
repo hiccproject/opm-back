@@ -312,11 +312,11 @@ public class PortfolioService {
 
     // 좋아요 토글
     @Transactional
-    public PortfolioReactionResponseDto toggleLike(Long memberId, Long portfolioId) {
+    public PortfolioReactionResponseDto toggleLike(Long memberId, String slug) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
-        Portfolio portfolio = portfolioRepository.findById(portfolioId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다."));
+        Portfolio portfolio = portfolioRepository.findTopBySlug(slug)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 명함 주소입니다."));
 
         Optional<PortfolioLike> existingLike = portfolioLikeRepository.findByMemberAndPortfolio(member, portfolio);
 
@@ -353,11 +353,11 @@ public class PortfolioService {
 
     // 스크랩 토글
     @Transactional
-    public PortfolioReactionResponseDto toggleScrap(Long memberId, Long portfolioId) {
+    public PortfolioReactionResponseDto toggleScrap(Long memberId, String slug) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
-        Portfolio portfolio = portfolioRepository.findById(portfolioId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다."));
+        Portfolio portfolio = portfolioRepository.findTopBySlug(slug)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 명함 주소입니다."));
 
         Optional<PortfolioScrap> existingScrap = portfolioScrapRepository.findByMemberAndPortfolio(member, portfolio);
 
